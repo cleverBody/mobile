@@ -1,28 +1,28 @@
 /* Ionic Variables and Theming. */
 :root {
-  /* Primary */
-  --ion-color-primary: #f55e55;
-  --ion-color-primary-rgb: 245, 94, 85;
-  --ion-color-primary-contrast: #ffffff;
-  --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #d8524b;
-  --ion-color-primary-tint: #f66e66;
+  /* Primary - 淡雅薄荷绿 */
+  --ion-color-primary: #a8e6cf;
+  --ion-color-primary-rgb: 168, 230, 207;
+  --ion-color-primary-contrast: #2d5a3d;
+  --ion-color-primary-contrast-rgb: 45, 90, 61;
+  --ion-color-primary-shade: #95ccb6;
+  --ion-color-primary-tint: #b1e9d4;
 
-  /* Secondary */
-  --ion-color-secondary: #3dc2ff;
-  --ion-color-secondary-rgb: 61, 194, 255;
-  --ion-color-secondary-contrast: #ffffff;
-  --ion-color-secondary-contrast-rgb: 255, 255, 255;
-  --ion-color-secondary-shade: #36abe0;
-  --ion-color-secondary-tint: #50c8ff;
+  /* Secondary - 柔和天空蓝 */
+  --ion-color-secondary: #c8e6f5;
+  --ion-color-secondary-rgb: 200, 230, 245;
+  --ion-color-secondary-contrast: #2d4a5a;
+  --ion-color-secondary-contrast-rgb: 45, 74, 90;
+  --ion-color-secondary-shade: #b0ccdb;
+  --ion-color-secondary-tint: #cee9f6;
 
-  /* Success */
-  --ion-color-success: #2dd36f;
-  --ion-color-success-rgb: 45, 211, 111;
-  --ion-color-success-contrast: #ffffff;
-  --ion-color-success-contrast-rgb: 255, 255, 255;
-  --ion-color-success-shade: #28ba62;
-  --ion-color-success-tint: #42d77d;
+  /* Success - 温和森林绿 */
+  --ion-color-success: #88d8a3;
+  --ion-color-success-rgb: 136, 216, 163;
+  --ion-color-success-contrast: #2d5a3d;
+  --ion-color-success-contrast-rgb: 45, 90, 61;
+  --ion-color-success-shade: #78be8f;
+  --ion-color-success-tint: #94dcac;
 
   /* Warning */
   --ion-color-warning: #ffc409;
@@ -80,22 +80,57 @@
   }
 }
 
-/* SPlayer 自定义主题变量 */
+/* SPlayer 淡雅绿色设计系统 */
 :root {
+  /* 主色调 - 淡雅薄荷绿 */
   --s-primary: var(--ion-color-primary);
-  --s-background: #ffffff;
-  --s-surface: #f8f9fa;
-  --s-text-primary: #1a1a1a;
-  --s-text-secondary: #666666;
-  --s-border: #e0e0e0;
-  --s-shadow: rgba(0, 0, 0, 0.1);
+  --s-primary-light: #c8f2e0;
+  --s-primary-dark: #7dd3a0;
+  --s-primary-accent: #88d8a3;
+
+  /* 背景色系 - 极淡的绿色调 */
+  --s-background: #fafcfb;
+  --s-surface: #ffffff;
+  --s-surface-variant: #f8fdf9;
+  --s-surface-elevated: #ffffff;
+  --s-surface-tint: #f0f9f4;
+
+  /* 文本色系 - 深绿灰调 */
+  --s-text-primary: #1a2e23;
+  --s-text-secondary: #4a6741;
+  --s-text-tertiary: #6b8a62;
+  --s-text-disabled: #a8c4a0;
+
+  /* 边框和分割线 - 淡绿调 */
+  --s-border: #e8f5ea;
+  --s-border-light: #f0f9f2;
+  --s-divider: #f4fbf5;
+  --s-shadow: rgba(168, 230, 207, 0.15);
+  --s-shadow-light: rgba(168, 230, 207, 0.08);
+
+  /* 状态色系 - 和谐绿色调 */
+  --s-success: #88d8a3;
+  --s-warning: #f4d03f;
+  --s-error: #ec7063;
+  --s-info: #85c1e9;
 }
 
 [data-theme="dark"] {
-  --s-background: #121212;
-  --s-surface: #1e1e1e;
-  --s-text-primary: #ffffff;
-  --s-text-secondary: #a0a0a0;
-  --s-border: #333333;
-  --s-shadow: rgba(0, 0, 0, 0.3);
+  /* 深色模式 - 深绿调 */
+  --s-background: #0f1511;
+  --s-surface: #1a2e23;
+  --s-surface-variant: #1f3326;
+  --s-surface-elevated: #243829;
+  --s-surface-tint: #2d4a35;
+
+  --s-text-primary: #e8f5ea;
+  --s-text-secondary: #a8c4a0;
+  --s-text-tertiary: #7a9471;
+  --s-text-disabled: #4a6741;
+
+  --s-border: #2d4a35;
+  --s-border-light: #243829;
+  --s-divider: #1f3326;
+  --s-shadow: rgba(0, 0, 0, 0.4);
+  --s-shadow-light: rgba(0, 0, 0, 0.2);
 }

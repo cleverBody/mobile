@@ -133,7 +133,7 @@ export const musicApi = {
   },
 
   // 获取专辑详情
-  getAlbumDetail(id: number): Promise<{ album: Album }> {
+  getAlbumDetail(id: number): Promise<{ album: Album, songs: Song[] }> {
     return api.get('/album', {
       params: { id }
     })

@@ -7,18 +7,18 @@
         <div class="playlist-hero" :style="{ backgroundImage: `url(${playlistInfo?.cover || '/images/album.jpg'})` }">
           <!-- 背景渐变遮罩 -->
           <div class="hero-overlay"></div>
-          
+
           <!-- 顶部操作栏 -->
           <div class="top-bar">
-            <IonButton 
-              fill="clear" 
+            <IonButton
+              fill="clear"
               color="light"
               @click="goBack"
               class="back-button"
             >
               <IonIcon :icon="arrowBackOutline" />
             </IonButton>
-            
+
             <div class="top-actions">
               <IonButton fill="clear" color="light" @click="sharePlaylist">
                 <IonIcon :icon="shareOutline" />
@@ -28,14 +28,14 @@
               </IonButton>
             </div>
           </div>
-          
+
           <!-- 歌单信息 - 紧凑横向布局 -->
           <div class="hero-content">
             <div class="playlist-main">
               <div class="playlist-cover-container">
                 <div class="playlist-cover">
-                  <img 
-                    :src="playlistInfo?.cover || '/images/album.jpg'" 
+                  <img
+                    :src="playlistInfo?.cover || '/images/album.jpg'"
                     :alt="playlistInfo?.name"
                     @error="handleImageError"
                   />
@@ -46,20 +46,20 @@
                   </div>
                 </div>
               </div>
-              
+
               <div class="playlist-info">
                 <h1 class="playlist-title">{{ playlistInfo?.name || '加载中...' }}</h1>
-                
+
                 <div class="creator-info">
-                  <img 
-                    :src="playlistInfo?.creator?.avatar || '/images/default-avatar.jpg'" 
+                  <img
+                    :src="playlistInfo?.creator?.avatar || '/images/default-avatar.jpg'"
                     :alt="playlistInfo?.creator?.name"
                     class="creator-avatar"
                     @error="handleAvatarError"
                   />
                   <span class="creator-name">{{ playlistInfo?.creator?.name }}</span>
                 </div>
-                
+
                 <div class="playlist-stats">
                   <span>{{ playlistInfo?.trackCount || 0 }}首</span>
                   <span class="separator">•</span>
@@ -67,11 +67,11 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- 操作按钮 -->
             <div class="hero-actions">
-              <IonButton 
-                expand="block" 
+              <IonButton
+                expand="block"
                 class="play-all-button"
                 @click="playAll"
                 :disabled="!songs.length"
@@ -79,10 +79,10 @@
                 <IonIcon :icon="play" slot="start" />
                 播放全部
               </IonButton>
-              
+
               <div class="action-row">
-                <IonButton 
-                  fill="clear" 
+                <IonButton
+                  fill="clear"
                   size="small"
                   color="light"
                   @click="toggleSubscribe"
@@ -90,11 +90,11 @@
                 >
                   <IonIcon :icon="isSubscribed ? heart : heartOutline" />
                 </IonButton>
-                
+
                 <IonButton fill="clear" size="small" color="light" @click="downloadAll">
                   <IonIcon :icon="downloadOutline" />
                 </IonButton>
-                
+
                 <IonButton fill="clear" size="small" color="light" @click="sharePlaylist">
                   <IonIcon :icon="shareOutline" />
                 </IonButton>
@@ -102,7 +102,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 歌曲列表区域 -->
         <div class="songs-section">
           <div class="section-header">
@@ -116,49 +116,49 @@
               </IonButton>
             </div>
           </div>
-          
+
           <!-- 加载状态 -->
           <div v-if="loading" class="loading-container">
             <IonSpinner name="circular" />
             <p>加载中...</p>
           </div>
-          
+
           <!-- 歌曲列表 -->
           <div v-else-if="songs.length > 0" class="songs-list">
-            <div 
-              v-for="(song, index) in sortedSongs" 
+            <div
+              v-for="(song, index) in sortedSongs"
               :key="song.id"
               class="song-item"
-              :class="{ 
+              :class="{
                 selected: selectedSongs.has(song.id),
                 playing: currentSong?.id === song.id
               }"
               @click="handleSongClick(song, index)"
             >
               <!-- 多选框 -->
-              <IonCheckbox 
+              <IonCheckbox
                 v-if="selectMode"
                 :checked="selectedSongs.has(song.id)"
                 @ionChange="toggleSongSelection(song.id)"
                 @click.stop
               />
-              
+
               <!-- 歌曲编号/播放状态 -->
               <div v-else class="song-index">
                 <span v-if="currentSong?.id !== song.id">{{ index + 1 }}</span>
                 <IonIcon v-else :icon="volumeHighOutline" color="primary" />
               </div>
-              
+
               <!-- 歌曲信息 -->
               <div class="song-main">
                 <div class="song-cover">
-                  <img 
-                    :src="song.cover || playlistInfo?.cover || '/images/album.jpg'" 
+                  <img
+                    :src="song.cover || playlistInfo?.cover || '/images/album.jpg'"
                     :alt="song.name"
                     @error="handleImageError"
                   />
                 </div>
-                
+
                 <div class="song-info">
                   <h3 class="song-name s-text-truncate">{{ song.name }}</h3>
                   <p class="song-meta s-text-secondary s-text-truncate">
@@ -167,25 +167,25 @@
                   </p>
                 </div>
               </div>
-              
+
               <!-- 歌曲操作 -->
               <div class="song-actions">
-                <IonButton 
-                  fill="clear" 
+                <IonButton
+                  fill="clear"
                   size="small"
                   @click.stop="toggleSongLike(song.id)"
                   :color="musicStore.isLiked(song.id) ? 'primary' : 'medium'"
                 >
                   <IonIcon :icon="musicStore.isLiked(song.id) ? heart : heartOutline" />
                 </IonButton>
-                
+
                 <IonButton fill="clear" size="small" @click.stop="moreSongActions(song)">
                   <IonIcon :icon="ellipsisVerticalOutline" />
                 </IonButton>
               </div>
             </div>
           </div>
-          
+
           <!-- 空状态 -->
           <div v-else class="empty-state">
             <IonIcon :icon="musicalNotesOutline" class="empty-icon" />
@@ -193,7 +193,7 @@
             <p>这个歌单还没有添加任何歌曲</p>
           </div>
         </div>
-        
+
         <!-- 多选操作栏 -->
         <div v-if="selectMode && selectedSongs.size > 0" class="batch-actions">
           <div class="batch-info">
@@ -426,9 +426,9 @@ onMounted(async () => {
   bottom: 0;
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.4) 0%,
-    rgba(0, 0, 0, 0.6) 50%,
-    rgba(0, 0, 0, 0.8) 100%
+    rgba(168, 230, 207, 0.2) 0%,
+    rgba(45, 90, 61, 0.4) 50%,
+    rgba(26, 46, 35, 0.8) 100%
   );
   backdrop-filter: blur(8px);
 }
@@ -523,15 +523,16 @@ onMounted(async () => {
 .play-button {
   width: 48px;
   height: 48px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--s-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--ion-color-primary);
+  color: white;
   font-size: 20px;
   cursor: pointer;
   backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(168, 230, 207, 0.4);
 }
 
 /* 歌单信息 - 优化布局 */
@@ -597,13 +598,13 @@ onMounted(async () => {
 }
 
 .play-all-button {
-  --background: rgba(255, 255, 255, 0.95);
-  --color: var(--ion-color-primary);
+  --background: var(--s-primary);
+  --color: white;
   --border-radius: 25px;
   height: 48px;
   font-weight: 600;
   font-size: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(168, 230, 207, 0.4);
 }
 
 .action-row {
@@ -818,38 +819,38 @@ onMounted(async () => {
     min-height: 60vh;
     padding: var(--ion-safe-area-top) 16px 16px;
   }
-  
+
   .playlist-cover {
     width: 160px;
     height: 160px;
     border-radius: 16px;
   }
-  
+
   .playlist-title {
     font-size: 24px;
   }
-  
+
   .action-row {
     flex-wrap: wrap;
     gap: 12px;
   }
-  
+
   .action-row ion-button {
     flex: 1;
     min-width: 80px;
   }
-  
+
   .songs-section {
     padding: 20px 16px 16px;
     margin-top: -16px;
   }
-  
+
   .batch-actions {
     flex-direction: column;
     gap: 8px;
     padding: 16px 20px;
   }
-  
+
   .batch-buttons {
     justify-content: center;
     width: 100%;

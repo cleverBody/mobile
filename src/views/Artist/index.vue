@@ -470,9 +470,9 @@ const showToast = async (message: string) => {
   bottom: 0;
   background: linear-gradient(
     180deg,
-    rgba(0, 0, 0, 0.4) 0%,
-    rgba(0, 0, 0, 0.6) 50%,
-    rgba(0, 0, 0, 0.8) 100%
+    rgba(168, 230, 207, 0.2) 0%,
+    rgba(45, 90, 61, 0.4) 50%,
+    rgba(26, 46, 35, 0.8) 100%
   );
   backdrop-filter: blur(8px);
 }
@@ -604,13 +604,13 @@ const showToast = async (message: string) => {
 }
 
 .play-all-button {
-  --background: rgba(255, 255, 255, 0.95);
-  --color: var(--ion-color-primary);
+  --background: var(--s-primary);
+  --color: white;
   --border-radius: 25px;
   height: 50px;
   font-weight: 600;
   font-size: 16px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(168, 230, 207, 0.4);
 }
 
 .action-row {

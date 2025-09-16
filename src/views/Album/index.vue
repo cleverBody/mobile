@@ -14,7 +14,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content>
+    <ion-content class="album-content">
       <div v-if="loading" class="loading-container">
         <ion-spinner></ion-spinner>
         <p>加载中...</p>
@@ -59,7 +59,15 @@
         <!-- 专辑简介 -->
         <div v-if="currentAlbum.description" class="album-description">
           <h3>专辑简介</h3>
-          <p>{{ currentAlbum.description }}</p>
+          <div class="description-content">
+            <p :class="{ 'description-collapsed': !descriptionExpanded }">
+              {{ currentAlbum.description }}
+            </p>
+            <div v-if="currentAlbum.description.length > 100" class="description-toggle" @click="descriptionExpanded = !descriptionExpanded">
+              {{ descriptionExpanded ? '收起' : '展开' }}
+              <ion-icon :icon="descriptionExpanded ? chevronUp : chevronDown"></ion-icon>
+            </div>
+          </div>
         </div>
 
         <!-- 歌曲列表头部 -->
@@ -113,7 +121,7 @@
                   <ion-icon v-if="song.mv" :icon="videocamOutline" class="mv-icon"></ion-icon>
                 </h4>
                 <p class="song-meta">
-                  <span v-if="song.artists.length > 1">
+                  <span v-if="song.artists && song.artists.length > 0">
                     {{ song.artists.map(a => a.name).join(' / ') }}
                   </span>
                   <span v-if="song.duration">{{ formatDuration(song.duration) }}</span>
@@ -128,17 +136,10 @@
               </ion-button>
             </div>
           </div>
-        </div>
 
-        <!-- 专辑信息 -->
-        <div class="album-meta">
-          <div v-if="currentAlbum.company" class="meta-item">
-            <span class="meta-label">发行公司</span>
-            <span class="meta-value">{{ currentAlbum.company }}</span>
-          </div>
-          <div class="meta-item">
-            <span class="meta-label">发行时间</span>
-            <span class="meta-value">{{ currentAlbum.publishTime }}</span>
+          <!-- 没有更多了提示 -->
+          <div v-if="albumSongs.length > 0" class="no-more-tip">
+            <span>没有更多了</span>
           </div>
         </div>
       </div>
@@ -157,7 +158,7 @@ import {
 } from '@ionic/vue'
 import {
   play, addCircle, checkmarkCircle, ellipsisVertical, shareOutline,
-  downloadOutline, videocamOutline, close
+  downloadOutline, videocamOutline, close, chevronUp, chevronDown
 } from 'ionicons/icons'
 import { useAlbumStore } from '../../stores/album'
 import { useMusicStore } from '../../stores/music'
@@ -169,6 +170,7 @@ const musicStore = useMusicStore()
 
 const selectMode = ref(false)
 const selectedSongs = ref<number[]>([])
+const descriptionExpanded = ref(false)
 
 const { currentAlbum, albumSongs, loading } = storeToRefs(albumStore)
 
@@ -346,6 +348,10 @@ const showToast = async (message: string) => {
 </script>
 
 <style scoped>
+.album-content {
+  --padding-bottom: 120px;
+}
+
 .loading-container {
   display: flex;
   flex-direction: column;
@@ -362,7 +368,7 @@ const showToast = async (message: string) => {
 .album-header {
   display: flex;
   padding: 20px;
-  background: linear-gradient(135deg, var(--ion-color-primary-tint), var(--ion-color-secondary-tint));
+  background: linear-gradient(135deg, var(--s-primary), var(--s-primary-accent));
   color: white;
   gap: 16px;
   position: relative;
@@ -386,14 +392,15 @@ const showToast = async (message: string) => {
   right: 8px;
   width: 40px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.9);
+  background: white;
   border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: var(--ion-color-primary);
+  color: var(--s-primary);
   font-size: 20px;
+  box-shadow: 0 4px 12px rgba(168, 230, 207, 0.3);
 }
 
 .album-info {
@@ -443,10 +450,39 @@ const showToast = async (message: string) => {
   font-weight: 600;
 }
 
+.album-description .description-content {
+  position: relative;
+}
+
 .album-description p {
   margin: 0;
   line-height: 1.6;
   color: var(--ion-color-step-600);
+  transition: all 0.3s ease;
+}
+
+.album-description .description-collapsed {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.description-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 8px;
+  color: var(--s-primary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.description-toggle:hover {
+  opacity: 0.8;
 }
 
 .songs-header {
@@ -495,6 +531,7 @@ const showToast = async (message: string) => {
 
 .songs-list {
   padding: 0 20px;
+  padding-bottom: 0;
 }
 
 .song-item {
@@ -555,29 +592,31 @@ const showToast = async (message: string) => {
   align-items: center;
 }
 
-.album-meta {
+.no-more-tip {
+  text-align: center;
   padding: 20px;
-  background: var(--ion-color-step-50);
-}
-
-.meta-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--ion-color-step-100);
-}
-
-.meta-item:last-child {
-  border-bottom: none;
-}
-
-.meta-label {
-  color: var(--ion-color-step-600);
+  color: var(--ion-color-medium);
   font-size: 14px;
+  position: relative;
+  margin: 20px 0;
+  margin-bottom: -100px; /* 抵消ion-content的底部padding */
 }
 
-.meta-value {
-  font-size: 14px;
-  font-weight: 500;
+.no-more-tip span {
+  position: relative;
+  background: var(--ion-background-color);
+  padding: 0 16px;
+  z-index: 1;
+}
+
+.no-more-tip::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  right: 20px;
+  height: 1px;
+  background: var(--ion-color-step-150);
+  z-index: 0;
 }
 </style>
