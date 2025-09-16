@@ -20,30 +20,30 @@
         <div class="quick-actions">
           <div class="action-grid">
             <div class="action-item" @click="goToDailyRecommend">
-              <div class="action-icon daily">
-                <IonIcon :icon="calendarOutline" />
-                <span class="date">{{ currentDate }}</span>
+              <div class="action-icon daily-recommend">
+                <IonIcon :icon="sparklesOutline" class="main-icon" />
+                <span class="date-badge">{{ currentDate }}</span>
               </div>
               <span class="action-label">每日推荐</span>
             </div>
 
             <div class="action-item" @click="startPersonalFM">
-              <div class="action-icon">
-                <IonIcon :icon="radioOutline" />
+              <div class="action-icon personal-fm">
+                <IonIcon :icon="radioOutline" class="main-icon" />
               </div>
               <span class="action-label">私人FM</span>
             </div>
 
             <div class="action-item" @click="goToLiked">
-              <div class="action-icon">
-                <IonIcon :icon="heartOutline" />
+              <div class="action-icon liked-music">
+                <IonIcon :icon="heartOutline" class="main-icon" />
               </div>
               <span class="action-label">我喜欢的</span>
             </div>
 
             <div class="action-item" @click="goToPodcast">
-              <div class="action-icon">
-                <IonIcon :icon="micOutline" />
+              <div class="action-icon podcast">
+                <IonIcon :icon="micOutline" class="main-icon" />
               </div>
               <span class="action-label">播客电台</span>
             </div>
@@ -161,13 +161,22 @@ import {
   IonSpinner
 } from '@ionic/vue'
 import {
+  calendar,
   calendarOutline,
+  radio,
   radioOutline,
+  heart,
   heartOutline,
+  mic,
   micOutline,
   chevronForwardOutline,
   play,
-  searchOutline
+  search,
+  searchOutline,
+  sparkles,
+  sparklesOutline,
+  musicalNote,
+  musicalNoteOutline
 } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
 import { useHomeStore } from '@/stores/home'
@@ -264,8 +273,9 @@ onMounted(async () => {
 
 <style scoped>
 .home-page {
-  padding: 16px;
-  padding-bottom: 120px; /* 为迷你播放器和底部导航预留空间 */
+  padding: 16px 16px 120px 16px;
+  max-width: 100%;
+  margin: 0 auto;
 }
 
 .loading-container {
@@ -295,18 +305,27 @@ onMounted(async () => {
 }
 
 .welcome-header {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+  padding: 8px 0;
 }
 
 .greeting {
-  font-size: 28px;
-  font-weight: bold;
-  margin: 0 0 4px 0;
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  background: linear-gradient(135deg, var(--s-text-primary) 0%, var(--s-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
 }
 
 .subtitle {
-  font-size: 14px;
+  font-size: 15px;
   margin: 0;
+  color: var(--s-text-secondary);
+  font-weight: 400;
+  letter-spacing: 0.2px;
 }
 
 .quick-actions {
@@ -316,7 +335,8 @@ onMounted(async () => {
 .action-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 20px;
+  padding: 0 4px;
 }
 
 .action-item {
@@ -324,41 +344,76 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 8px;
+  border-radius: 16px;
 }
 
 .action-item:active {
   transform: scale(0.95);
+  background: var(--s-surface-tint);
 }
 
 .action-icon {
   position: relative;
-  width: 56px;
-  height: 56px;
-  background: var(--s-primary);
-  border-radius: 16px;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 24px;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+  box-shadow: 0 4px 16px var(--s-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.action-icon.daily .date {
+.action-icon:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--s-shadow);
+}
+
+.main-icon {
+  font-size: 28px;
+  color: white;
+}
+
+/* 每个图标的独特渐变背景 */
+.daily-recommend {
+  background: linear-gradient(135deg, #a8e6cf 0%, #88d8a3 100%);
+}
+
+.personal-fm {
+  background: linear-gradient(135deg, #85c1e9 0%, #5dade2 100%);
+}
+
+.liked-music {
+  background: linear-gradient(135deg, #f1948a 0%, #ec7063 100%);
+}
+
+.podcast {
+  background: linear-gradient(135deg, #f4d03f 0%, #f39c12 100%);
+}
+
+.date-badge {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 12px;
+  bottom: 6px;
+  right: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--s-text-primary);
+  font-size: 10px;
   font-weight: bold;
-  margin-top: 2px;
+  padding: 2px 6px;
+  border-radius: 8px;
+  min-width: 16px;
+  text-align: center;
 }
 
 .action-label {
   font-size: 12px;
+  font-weight: 500;
   text-align: center;
   color: var(--s-text-primary);
+  letter-spacing: 0.2px;
 }
 
 .content-section {
@@ -370,70 +425,108 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+  padding: 0 2px;
 }
 
 .section-title {
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 20px;
+  font-weight: 700;
   margin: 0;
+  color: var(--s-text-primary);
+  letter-spacing: -0.3px;
 }
 
-.playlist-grid,
+.playlist-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  width: 100%;
+}
+
 .album-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  grid-auto-rows: 1fr; /* 所有行等高 */
-  gap: 12px;
+  gap: 16px;
   width: 100%;
 }
 
 .artist-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 1fr; /* 所有行等高 */
-  gap: 12px;
+  gap: 14px;
   width: 100%;
 }
 
 .playlist-card,
-.album-card,
-.artist-card {
+.album-card {
   cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   width: 100%;
-  min-width: 0; /* 防止flex子项收缩问题 */
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  height: 100%; /* 确保所有卡片等高 */
+  height: 100%;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--s-surface);
+  box-shadow: 0 2px 8px var(--s-shadow-light);
+}
+
+.artist-card {
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  padding: 8px 6px;
+  border-radius: 12px;
+  background: var(--s-surface);
+  box-shadow: 0 2px 8px var(--s-shadow-light);
+}
+
+.playlist-card:hover,
+.album-card:hover,
+.artist-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px var(--s-shadow);
+  background: var(--s-surface-elevated);
 }
 
 .playlist-card:active,
 .album-card:active,
 .artist-card:active {
-  transform: scale(0.95);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px var(--s-shadow);
 }
 
 .playlist-cover,
 .album-cover {
   position: relative;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 4px;
+  margin-bottom: 10px;
   width: 100% !important;
-  height: 130px !important; /* 强制固定高度 */
+  height: 130px !important;
   min-height: 130px !important;
   max-height: 130px !important;
-  background-size: cover !important; /* 背景图填满 */
-  background-position: center !important; /* 背景图居中 */
-  background-repeat: no-repeat !important; /* 不重复 */
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  box-shadow: 0 3px 12px var(--s-shadow-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .artist-avatar {
   aspect-ratio: 1;
   border-radius: 50%;
   overflow: hidden;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   width: 100%;
+  box-shadow: 0 2px 8px var(--s-shadow-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .playlist-cover img,
@@ -467,94 +560,133 @@ onMounted(async () => {
 }
 
 .playlist-name,
-.album-name,
+.album-name {
+  font-size: 13px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  line-height: 1.3;
+  color: var(--s-text-primary);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  flex-shrink: 0;
+}
+
 .artist-name {
   font-size: 12px;
   font-weight: 500;
   margin: 0;
-  line-height: 1.2;
-  height: 26px; /* 固定文本区域高度 */
+  line-height: 1.3;
+  color: var(--s-text-primary);
+  text-align: center;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2; /* 标准属性 */
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
-  flex-shrink: 0; /* 不允许收缩 */
 }
 
 .album-artist {
   font-size: 11px;
-  margin: 2px 0 0 0;
+  margin: 0;
   line-height: 1.2;
+  color: var(--s-text-secondary);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
 }
 
 .search-bar-container {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .search-bar {
   display: flex;
   align-items: center;
-  padding: 12px 16px;
+  padding: 14px 20px;
   background: var(--s-surface);
-  border-radius: 24px;
-  border: 1px solid var(--s-border);
+  border-radius: 28px;
+  border: 1px solid var(--s-border-light);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 12px var(--s-shadow-light);
 }
 
 .search-bar:hover {
-  background: var(--s-border);
   border-color: var(--s-primary);
+  box-shadow: 0 4px 20px var(--s-shadow);
+  transform: translateY(-1px);
 }
 
 .search-bar:active {
-  transform: scale(0.98);
+  transform: translateY(0);
+  box-shadow: 0 2px 12px var(--s-shadow-light);
 }
 
 .search-icon {
-  color: var(--s-text-secondary);
-  margin-right: 12px;
-  font-size: 18px;
+  color: var(--s-text-tertiary);
+  margin-right: 14px;
+  font-size: 20px;
+  transition: color 0.3s ease;
+}
+
+.search-bar:hover .search-icon {
+  color: var(--s-primary);
 }
 
 .search-placeholder {
   color: var(--s-text-secondary);
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 400;
   flex: 1;
+  letter-spacing: 0.2px;
 }
 
 @media (max-width: 480px) {
+  .home-page {
+    padding: 12px 12px 120px 12px;
+  }
+
   .playlist-grid,
   .album-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 12px;
   }
 
   .artist-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 10px;
   }
 
   .playlist-cover,
   .album-cover {
-    max-width: 120px;
-    max-height: 120px;
+    height: 120px !important;
+    min-height: 120px !important;
+    max-height: 120px !important;
   }
 
-  .artist-avatar {
-    max-width: 60px;
-    max-height: 60px;
+  .playlist-card,
+  .album-card {
+    padding: 10px;
+  }
+
+  .artist-card {
+    padding: 6px;
   }
 
   .action-grid {
     grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
+    gap: 16px;
   }
 
   .action-icon {
-    width: 48px;
-    height: 48px;
+    width: 56px;
+    height: 56px;
+  }
+
+  .content-section {
+    margin-bottom: 28px;
   }
 }
 </style>

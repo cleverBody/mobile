@@ -383,9 +383,9 @@ const formatTime = (time: number) => {
   bottom: 0;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.3) 0%,
-    rgba(0, 0, 0, 0.5) 50%,
-    rgba(0, 0, 0, 0.8) 100%
+    rgba(168, 230, 207, 0.1) 0%,
+    rgba(45, 90, 61, 0.3) 50%,
+    rgba(26, 46, 35, 0.8) 100%
   );
 }
 
@@ -502,11 +502,12 @@ const formatTime = (time: number) => {
 }
 
 .play-button {
-  --background: white;
-  --color: var(--s-primary);
+  --background: var(--s-primary);
+  --color: white;
   --border-radius: 50%;
   width: 64px;
   height: 64px;
+  box-shadow: 0 4px 16px rgba(168, 230, 207, 0.3);
 }
 
 .player-tabs {

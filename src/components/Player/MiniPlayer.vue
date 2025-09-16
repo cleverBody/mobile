@@ -189,20 +189,21 @@ const handleImageError = (event: Event) => {
   position: fixed;
   left: 0;
   right: 0;
-  height: 60px;
+  height: 64px;
   z-index: 1000;
-  background: var(--ion-color-step-50, #f8f9fa);
-  border-top: 1px solid var(--ion-color-step-150, #e0e0e0);
-  backdrop-filter: blur(20px);
-  box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  background: var(--s-surface-elevated);
+  border-top: 1px solid var(--s-border-light);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 -4px 20px var(--s-shadow-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* 默认紧贴底部（二级页面） */
   bottom: 0;
 
   /* 在tabs布局中，留出底部导航栏空间 */
   &.with-tabs {
-    bottom: calc(50px + var(--ion-safe-area-bottom));
+    bottom: calc(60px + var(--ion-safe-area-bottom));
   }
 }
 
@@ -212,16 +213,17 @@ const handleImageError = (event: Event) => {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: var(--ion-color-step-100, #f0f0f0);
+  height: 3px;
+  background: var(--s-border-light);
   overflow: hidden;
 }
 
 .progress-bar {
   height: 100%;
-  background: var(--ion-color-primary, #3880ff);
-  transition: width 0.2s ease;
+  background: linear-gradient(90deg, var(--s-primary) 0%, var(--s-primary-accent) 100%);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  box-shadow: 0 0 8px rgba(168, 230, 207, 0.3);
 }
 
 /* === 主要布局 === */
@@ -258,11 +260,17 @@ const handleImageError = (event: Event) => {
 
 .cover {
   position: relative;
-  width: 44px;
-  height: 44px;
-  border-radius: 6px;
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px var(--s-shadow-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cover:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px var(--s-shadow);
 }
 
 .cover img {

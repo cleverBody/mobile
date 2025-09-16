@@ -19,9 +19,9 @@ export const useHomeStore = defineStore('home', () => {
     try {
       // 并行请求所有数据
       const [playlistsRes, artistsRes, albumsRes] = await Promise.all([
-        musicApi.getPersonalizedPlaylists(6),
-        musicApi.getTopArtists(12),
-        musicApi.getNewAlbums(6)
+        musicApi.getPersonalizedPlaylists(4),  // 减少推荐歌单从6到4
+        musicApi.getTopArtists(9),             // 调整热门歌手为9个
+        musicApi.getNewAlbums(4)               // 保持新专辑4个
       ])
 
       // 格式化并设置数据

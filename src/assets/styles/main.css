@@ -11,6 +11,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--s-background);
   color: var(--s-text-primary);
+  line-height: 1.6;
+  letter-spacing: 0.1px;
 }
 
 /* 统一圆角 */
@@ -22,8 +24,20 @@ body {
   border-radius: 8px;
 }
 
+.s-border-radius-medium {
+  border-radius: 12px;
+}
+
 .s-border-radius-large {
   border-radius: 16px;
+}
+
+.s-border-radius-xl {
+  border-radius: 20px;
+}
+
+.s-border-radius-2xl {
+  border-radius: 24px;
 }
 
 /* 阴影 */
@@ -31,8 +45,20 @@ body {
   box-shadow: 0 2px 8px var(--s-shadow);
 }
 
-.s-shadow-large {
+.s-shadow-light {
+  box-shadow: 0 2px 12px var(--s-shadow-light);
+}
+
+.s-shadow-medium {
   box-shadow: 0 4px 16px var(--s-shadow);
+}
+
+.s-shadow-large {
+  box-shadow: 0 8px 24px var(--s-shadow);
+}
+
+.s-shadow-xl {
+  box-shadow: 0 12px 32px var(--s-shadow);
 }
 
 /* 文本样式 */

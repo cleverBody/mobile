@@ -39,7 +39,10 @@ export const useAlbumStore = defineStore('album', () => {
     try {
       // 获取专辑详情
       const albumResponse = await musicApi.getAlbumDetail(id)
-      const album = albumResponse.data?.album || albumResponse.album
+
+      // 根据实际API响应结构解析数据
+      const album = albumResponse.album || albumResponse.data?.album
+      const songs = albumResponse.songs || albumResponse.data?.songs || []
 
       currentAlbum.value = {
         id: album.id,
@@ -48,21 +51,20 @@ export const useAlbumStore = defineStore('album', () => {
         description: album.description,
         artist: album.artist?.name || album.artists?.[0]?.name || '未知艺人',
         artistId: album.artist?.id || album.artists?.[0]?.id || 0,
-        publishTime: album.publishTime || album.publishTime,
+        publishTime: album.publishTime ? new Date(album.publishTime).toLocaleDateString() : '',
         company: album.company,
-        songsCount: album.size || 0,
+        songsCount: album.size || songs.length || 0,
         playCount: album.playCount,
         isSubscribed: album.subType === 1
       }
 
-      // 专辑歌曲直接从专辑详情中获取
-      const songs = albumResponse.data?.songs || album.songs || []
+      // 处理专辑歌曲
       if (songs && songs.length > 0) {
         albumSongs.value = songs.map((song: any, index: number) => ({
           id: song.id,
           name: song.name,
           artists: song.ar || song.artists || [],
-          duration: Math.floor(song.dt / 1000) || song.duration,
+          duration: Math.floor((song.dt || song.duration || 0) / 1000),
           track: song.no || index + 1,
           disc: song.cd || 1,
           mv: song.mv || undefined,
@@ -72,8 +74,7 @@ export const useAlbumStore = defineStore('album', () => {
         albumSongs.value = []
       }
 
-      console.log('专辑信息加载完成:', currentAlbum.value.name)
-      console.log('专辑歌曲数量:', albumSongs.value.length)
+
     } catch (error) {
       console.error('加载专辑信息失败:', error)
       throw error
