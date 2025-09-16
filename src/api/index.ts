@@ -4,8 +4,8 @@ import { useUserStore } from '@/stores/user'
 
 // 创建API实例
 const api = axios.create({
-  baseURL: '/api',
-  timeout: 10000, // 本地API服务器，可以用正常超时时间
+  baseURL: 'https://netease-proxy-server.onrender.com',
+  timeout: 30000, // 远程服务器，增加超时时间
   headers: {
     'Content-Type': 'application/json'
   }
