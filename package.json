@@ -1,0 +1,47 @@
+{
+  "name": "splayer-mobile",
+  "productName": "SPlayer Mobile",
+  "version": "1.0.0",
+  "description": "SPlayer 移动端音乐播放器",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
+    "format": "prettier --write src/",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "@ionic/vue": "^7.6.0",
+    "@ionic/vue-router": "^7.6.0",
+    "@vueuse/core": "^10.7.0",
+    "axios": "^1.6.2",
+    "dayjs": "^1.11.10",
+    "howler": "^2.2.4",
+    "ionicons": "^8.0.13",
+    "lodash-es": "^4.17.21",
+    "pinia": "^2.1.7",
+    "pinia-plugin-persistedstate": "^3.2.1",
+    "swiper": "^11.0.5",
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5"
+  },
+  "devDependencies": {
+    "@types/howler": "^2.2.11",
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "^20.10.6",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "@vitejs/plugin-vue": "^4.5.2",
+    "eslint": "^8.56.0",
+    "eslint-plugin-vue": "^9.19.2",
+    "prettier": "^3.1.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.10",
+    "vue-tsc": "^3.0.7"
+  }
+}
