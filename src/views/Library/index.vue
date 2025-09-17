@@ -7,7 +7,7 @@
           <IonButton @click="openProfile">
             <IonAvatar class="user-avatar">
               <img
-                :src="userStore.userProfile?.avatar || '/images/default-avatar.jpg'"
+                :src="userStore.userProfile?.avatar || ''"
                 :alt="userStore.userProfile?.nickname"
                 @error="handleAvatarError"
               />
@@ -38,7 +38,7 @@
             <div class="user-info">
               <IonAvatar class="user-avatar-large">
                 <img
-                  :src="userStore.userProfile?.avatar || '/images/default-avatar.jpg'"
+                  :src="userStore.userProfile?.avatar || ''"
                   :alt="userStore.userProfile?.nickname"
                   @error="handleAvatarError"
                 />
@@ -332,7 +332,7 @@ const handleImageError = (event: Event) => {
 
 const handleAvatarError = (event: Event) => {
   const target = event.target as HTMLImageElement
-  target.src = '/images/default-avatar.jpg'
+  target.style.display = 'none'
 }
 
 // 生命周期

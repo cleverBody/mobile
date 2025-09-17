@@ -26,14 +26,14 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/Discover/index.vue')
       },
       {
-        path: 'library',
-        name: 'Library',
-        component: () => import('@/views/Library/index.vue')
+        path: 'collection',
+        name: 'Collection',
+        component: () => import('@/views/Collection/index.vue')
       },
       {
-        path: 'settings',
-        name: 'Settings',
-        component: () => import('@/views/Settings/index.vue')
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/views/Profile/index.vue')
       }
     ]
   },
@@ -58,13 +58,9 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/Album/index.vue')
   },
   {
-    path: '/artist',
+    path: '/artist/:id',
     name: 'Artist',
-    component: () => import('@/views/Artist/index.vue'),
-    beforeEnter: (to, _, next) => {
-      if (!to.query.id) next({ path: '/404' });
-      else next();
-    }
+    component: () => import('@/views/Artist/index.vue')
   },
   {
     path: '/daily-recommend',
@@ -72,9 +68,39 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/DailyRecommend/index.vue')
   },
   {
+    path: '/discover/playlist-square',
+    name: 'PlaylistSquare',
+    component: () => import('@/views/Discover/PlaylistSquare.vue')
+  },
+  {
+    path: '/discover/rankings',
+    name: 'Rankings',
+    component: () => import('@/views/Discover/Rankings.vue')
+  },
+  {
+    path: '/discover/artists',
+    name: 'DiscoverArtists',
+    component: () => import('@/views/Discover/Artists.vue')
+  },
+  {
+    path: '/discover/new-music',
+    name: 'NewMusic',
+    component: () => import('@/views/Discover/NewMusic.vue')
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/Login/index.vue')
+  },
+  {
+    path: '/settings',
+    name: 'Settings',
+    component: () => import('@/views/Settings/index.vue')
+  },
+  {
+    path: '/test',
+    name: 'Test',
+    component: () => import('@/views/Test.vue')
   }
 ]
 

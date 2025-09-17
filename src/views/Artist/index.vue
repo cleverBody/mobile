@@ -34,7 +34,7 @@
             <div class="artist-avatar-container">
               <div class="artist-avatar">
                 <img
-                  :src="currentArtist?.cover || '/images/default-avatar.jpg'"
+                  :src="currentArtist?.cover || ''"
                   :alt="currentArtist?.name"
                   @error="handleImageError"
                 />
@@ -417,7 +417,7 @@ const handleTabChange = (event: any) => {
 
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement
-  target.src = '/images/default-avatar.jpg'
+  target.style.display = 'none'
 }
 
 const goToAlbum = (albumId: number) => {

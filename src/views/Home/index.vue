@@ -110,7 +110,7 @@
             >
               <div class="artist-avatar">
                 <img
-                  :src="artist.avatar || '/images/default-avatar.jpg'"
+                  :src="artist.avatar || ''"
                   :alt="artist.name"
                   @error="handleImageError"
                 />

@@ -3,15 +3,18 @@
     <IonHeader>
       <IonToolbar>
         <IonTitle>设置</IonTitle>
+        <IonButtons slot="start">
+          <IonBackButton default-href="/tabs/profile" />
+        </IonButtons>
       </IonToolbar>
     </IonHeader>
-    
+
     <IonContent :fullscreen="true">
       <div class="settings-page">
         <!-- 播放设置 -->
         <div class="settings-section">
           <h2 class="section-title">播放设置</h2>
-          
+
           <IonList>
             <IonItem>
               <IonIcon :icon="volumeHighOutline" slot="start" />
@@ -29,7 +32,7 @@
                 style="width: 120px"
               />
             </IonItem>
-            
+
             <IonItem>
               <IonIcon :icon="musicalNotesOutline" slot="start" />
               <IonLabel>
@@ -48,7 +51,7 @@
                 <IonSelectOption value="lossless">无损音质</IonSelectOption>
               </IonSelect>
             </IonItem>
-            
+
             <IonItem>
               <IonIcon :icon="shuffleOutline" slot="start" />
               <IonLabel>
@@ -66,7 +69,7 @@
                 <IonSelectOption value="repeat">单曲循环</IonSelectOption>
               </IonSelect>
             </IonItem>
-            
+
             <IonItem>
               <IonIcon :icon="timerOutline" slot="start" />
               <IonLabel>
@@ -81,11 +84,11 @@
             </IonItem>
           </IonList>
         </div>
-        
+
         <!-- 外观设置 -->
         <div class="settings-section">
           <h2 class="section-title">外观设置</h2>
-          
+
           <IonList>
             <IonItem>
               <IonIcon :icon="colorPaletteOutline" slot="start" />
@@ -104,7 +107,7 @@
                 <IonSelectOption value="auto">跟随系统</IonSelectOption>
               </IonSelect>
             </IonItem>
-            
+
             <IonItem>
               <IonIcon :icon="brushOutline" slot="start" />
               <IonLabel>
@@ -117,7 +120,7 @@
                 @ionChange="handleDynamicThemeToggle"
               />
             </IonItem>
-            
+
             <IonItem>
               <IonIcon :icon="textOutline" slot="start" />
               <IonLabel>
@@ -137,11 +140,11 @@
             </IonItem>
           </IonList>
         </div>
-        
+
         <!-- 数据设置 -->
         <div class="settings-section">
           <h2 class="section-title">数据设置</h2>
-          
+
           <IonList>
             <IonItem>
               <IonIcon :icon="cloudDownloadOutline" slot="start" />
@@ -155,7 +158,7 @@
                 @ionChange="handleAutoCacheToggle"
               />
             </IonItem>
-            
+
             <IonItem>
               <IonIcon :icon="folderOutline" slot="start" />
               <IonLabel>
@@ -166,7 +169,7 @@
                 清空缓存
               </IonButton>
             </IonItem>
-            
+
             <IonItem>
               <IonIcon :icon="wifiOutline" slot="start" />
               <IonLabel>
@@ -181,11 +184,11 @@
             </IonItem>
           </IonList>
         </div>
-        
+
         <!-- 通知设置 -->
         <div class="settings-section">
           <h2 class="section-title">通知设置</h2>
-          
+
           <IonList>
             <IonItem>
               <IonIcon :icon="notificationsOutline" slot="start" />
@@ -199,7 +202,7 @@
                 @ionChange="handlePushNotificationsToggle"
               />
             </IonItem>
-            
+
             <IonItem>
               <IonIcon :icon="lockClosedOutline" slot="start" />
               <IonLabel>
@@ -214,11 +217,11 @@
             </IonItem>
           </IonList>
         </div>
-        
+
         <!-- 其他设置 -->
         <div class="settings-section">
           <h2 class="section-title">其他</h2>
-          
+
           <IonList>
             <IonItem button @click="checkUpdates">
               <IonIcon :icon="downloadOutline" slot="start" />
@@ -228,7 +231,7 @@
               </IonLabel>
               <IonIcon :icon="chevronForwardOutline" slot="end" />
             </IonItem>
-            
+
             <IonItem button @click="showAbout">
               <IonIcon :icon="informationCircleOutline" slot="start" />
               <IonLabel>
@@ -237,7 +240,7 @@
               </IonLabel>
               <IonIcon :icon="chevronForwardOutline" slot="end" />
             </IonItem>
-            
+
             <IonItem button @click="showFeedback">
               <IonIcon :icon="chatbubbleOutline" slot="start" />
               <IonLabel>
@@ -246,7 +249,7 @@
               </IonLabel>
               <IonIcon :icon="chevronForwardOutline" slot="end" />
             </IonItem>
-            
+
             <IonItem v-if="userStore.isLoggedIn" button @click="logout" class="logout-item">
               <IonIcon :icon="logOutOutline" slot="start" color="danger" />
               <IonLabel color="danger">
@@ -277,6 +280,8 @@ import {
   IonSelectOption,
   IonButton,
   IonRange,
+  IonButtons,
+  IonBackButton,
   alertController,
   toastController
 } from '@ionic/vue'
@@ -500,7 +505,11 @@ ion-item {
   --color: var(--s-text-primary);
   margin-bottom: 8px;
   border-radius: 12px;
+  box-shadow: 0 2px 8px var(--s-shadow-light);
+  transition: all 0.2s ease;
 }
+
+
 
 ion-item ion-icon[slot="start"] {
   margin-right: 16px;
@@ -515,6 +524,7 @@ ion-label h3 {
   font-size: 16px;
   font-weight: 500;
   margin-bottom: 4px;
+  color: var(--s-text-primary);
 }
 
 ion-label p {
@@ -526,19 +536,102 @@ ion-range {
   --bar-background: var(--s-border);
   --bar-background-active: var(--s-primary);
   --knob-background: var(--s-primary);
+  --knob-size: 20px;
 }
 
 ion-toggle {
   --background: var(--s-border);
   --background-checked: var(--s-primary);
+  --handle-background: white;
+  --handle-background-checked: white;
 }
 
 ion-select {
   --placeholder-color: var(--s-text-secondary);
+  color: var(--s-text-primary);
 }
 
 ion-button {
   --color: var(--s-primary);
   --border-color: var(--s-primary);
+  font-size: 12px;
+  height: 32px;
 }
+
+/* 特殊样式 */
+.logout-item ion-icon[slot="start"] {
+  color: var(--ion-color-danger);
+}
+
+.logout-item ion-label h3 {
+  color: var(--ion-color-danger);
+}
+
+
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .settings-page {
+    padding: 8px;
+  }
+
+  .section-title {
+    padding: 0 8px;
+    font-size: 16px;
+  }
+
+  ion-item {
+    margin-bottom: 6px;
+  }
+
+  ion-range {
+    width: 100px !important;
+  }
+}
+
+/* 深色模式适配 */
+@media (prefers-color-scheme: dark) {
+  ion-item {
+    --background: var(--s-surface-dark);
+    --border-color: var(--s-border-dark);
+  }
+
+  ion-toggle {
+    --handle-background: var(--s-surface);
+    --handle-background-checked: var(--s-surface);
+  }
+}
+
+/* 设置项分组间距 */
+.settings-section:not(:last-child) {
+  border-bottom: 1px solid var(--s-border-light);
+  padding-bottom: 16px;
+}
+
+/* 滑块样式优化 */
+ion-range::part(bar) {
+  border-radius: 4px;
+  height: 4px;
+}
+
+ion-range::part(bar-active) {
+  border-radius: 4px;
+}
+
+ion-range::part(knob) {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 选择器样式 */
+ion-select::part(icon) {
+  color: var(--s-text-secondary);
+}
+
+/* 按钮样式 */
+ion-button[fill="outline"] {
+  --border-width: 1px;
+  --border-style: solid;
+}
+
+
 </style>

@@ -19,12 +19,12 @@
             <IonLabel class="tab-label">发现</IonLabel>
           </IonTabButton>
 
-          <IonTabButton tab="library" href="/tabs/library" class="tab-button">
-            <IonIcon :icon="musicalNotesOutline" class="tab-icon" />
-            <IonLabel class="tab-label">音乐库</IonLabel>
+          <IonTabButton tab="collection" href="/tabs/collection" class="tab-button">
+            <IonIcon :icon="starOutline" class="tab-icon" />
+            <IonLabel class="tab-label">收藏</IonLabel>
           </IonTabButton>
 
-          <IonTabButton tab="settings" href="/tabs/settings" class="tab-button">
+          <IonTabButton tab="profile" href="/tabs/profile" class="tab-button">
             <IonIcon :icon="personOutline" class="tab-icon" />
             <IonLabel class="tab-label">我的</IonLabel>
           </IonTabButton>
@@ -49,8 +49,8 @@ import {
   homeOutline,
   compass,
   compassOutline,
-  musicalNotes,
-  musicalNotesOutline,
+  star,
+  starOutline,
   person,
   personOutline
 } from 'ionicons/icons'
