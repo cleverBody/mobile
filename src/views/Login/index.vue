@@ -1,476 +1,780 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/my"></ion-back-button>
-        </ion-buttons>
-        <ion-title>登录</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    
-    <ion-content class="login-content">
+  <IonPage>
+    <IonContent :fullscreen="true" class="login-page">
+      <!-- 顶部按钮 -->
+      <div class="top-buttons">
+        <IonButton fill="clear" @click="$router.back()" class="back-btn">
+          <IonIcon :icon="arrowBackOutline" />
+        </IonButton>
+
+        <IonButton fill="clear" @click="handleGuestLogin" class="guest-btn" :disabled="guestLoading">
+          <span v-if="!guestLoading">游客体验</span>
+          <div v-else class="loading-spinner"></div>
+          <IonIcon :icon="chevronForwardOutline" />
+        </IonButton>
+      </div>
+
       <div class="login-container">
-        <!-- Logo区域 -->
-        <div class="logo-section">
-          <!-- <img src="/images/logo.png" alt="SPlayer" class="logo" /> -->
-          <h1 class="app-name">SPlayer</h1>
-          <p class="app-slogan">发现好音乐，享受好时光</p>
-        </div>
-        
-        <!-- 登录表单 -->
-        <form @submit.prevent="handleLogin" class="login-form">
-          <!-- 登录方式切换 -->
-          <ion-segment v-model="loginMethod" class="login-method">
-            <ion-segment-button value="phone">
-              <ion-label>手机号登录</ion-label>
-            </ion-segment-button>
-            <ion-segment-button value="email">
-              <ion-label>邮箱登录</ion-label>
-            </ion-segment-button>
-          </ion-segment>
-          
-          <!-- 手机号登录 -->
-          <div v-if="loginMethod === 'phone'" class="form-fields">
-            <ion-item>
-              <ion-label position="stacked">手机号</ion-label>
-              <ion-input
-                v-model="phoneForm.phone"
-                type="tel"
-                placeholder="请输入手机号"
-                :class="{ 'ion-invalid': phoneForm.phoneError }"
-                @ion-blur="validatePhone"
-                required
-              ></ion-input>
-              <ion-note v-if="phoneForm.phoneError" slot="error">{{ phoneForm.phoneError }}</ion-note>
-            </ion-item>
-            
-            <ion-item>
-              <ion-label position="stacked">密码</ion-label>
-              <ion-input
-                v-model="phoneForm.password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="请输入密码"
-                :class="{ 'ion-invalid': phoneForm.passwordError }"
-                @ion-blur="validatePassword"
-                required
-              ></ion-input>
-              <ion-button slot="end" fill="clear" @click="togglePassword">
-                <ion-icon :icon="showPassword ? eyeOffOutline : eyeOutline"></ion-icon>
-              </ion-button>
-              <ion-note v-if="phoneForm.passwordError" slot="error">{{ phoneForm.passwordError }}</ion-note>
-            </ion-item>
-            
-            <!-- 验证码登录选项 -->
-            <div class="captcha-option">
-              <ion-checkbox v-model="useCaptcha"></ion-checkbox>
-              <ion-label class="captcha-label">使用短信验证码登录</ion-label>
+        <!-- 上半部分：欢迎区域和表单 -->
+        <div class="top-section">
+          <!-- 顶部欢迎区域 -->
+          <div class="welcome-header">
+            <div class="app-logo">
+              <IonIcon :icon="musicalNotesOutline" />
             </div>
-            
-            <ion-item v-if="useCaptcha">
-              <ion-label position="stacked">验证码</ion-label>
-              <ion-input
-                v-model="phoneForm.captcha"
-                type="text"
-                placeholder="请输入验证码"
-                :maxlength="6"
-              ></ion-input>
-              <ion-button 
-                slot="end" 
-                size="small" 
-                fill="outline"
-                :disabled="!phoneForm.phone || captchaCountdown > 0"
-                @click="sendCaptcha"
-              >
-                {{ captchaCountdown > 0 ? `${captchaCountdown}s` : '发送验证码' }}
-              </ion-button>
-            </ion-item>
+            <h1 class="greeting">欢迎回来</h1>
+            <p class="subtitle s-text-secondary">登录享受完整音乐体验</p>
           </div>
-          
-          <!-- 邮箱登录 -->
-          <div v-else class="form-fields">
-            <ion-item>
-              <ion-label position="stacked">邮箱</ion-label>
-              <ion-input
-                v-model="emailForm.email"
-                type="email"
-                placeholder="请输入邮箱"
-                :class="{ 'ion-invalid': emailForm.emailError }"
-                @ion-blur="validateEmail"
-                required
-              ></ion-input>
-              <ion-note v-if="emailForm.emailError" slot="error">{{ emailForm.emailError }}</ion-note>
-            </ion-item>
-            
-            <ion-item>
-              <ion-label position="stacked">密码</ion-label>
-              <ion-input
-                v-model="emailForm.password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="请输入密码"
-                :class="{ 'ion-invalid': emailForm.passwordError }"
-                @ion-blur="validatePassword"
-                required
-              ></ion-input>
-              <ion-button slot="end" fill="clear" @click="togglePassword">
-                <ion-icon :icon="showPassword ? eyeOffOutline : eyeOutline"></ion-icon>
-              </ion-button>
-              <ion-note v-if="emailForm.passwordError" slot="error">{{ emailForm.passwordError }}</ion-note>
-            </ion-item>
-          </div>
-          
-          <!-- 登录按钮 -->
-          <ion-button 
-            type="submit"
-            expand="block"
-            class="login-button"
-            :disabled="!isFormValid || loginLoading"
-          >
-            <ion-spinner v-if="loginLoading" name="crescent"></ion-spinner>
-            <span v-else>登录</span>
-          </ion-button>
-        </form>
-        
-        <!-- 其他选项 -->
-        <div class="login-options">
-          <div class="forgot-password">
-            <a href="#" @click="forgotPassword">忘记密码？</a>
-          </div>
-          
-          <div class="register-link">
-            <span>还没有账号？</span>
-            <a href="#" @click="goToRegister">立即注册</a>
+
+        <!-- 主登录表单 -->
+        <div class="main-form">
+          <div class="form-content">
+            <!-- 手机号输入 -->
+            <div class="input-group">
+              <div class="input-wrapper">
+                <IonIcon :icon="callOutline" class="input-icon" />
+                <input
+                  v-model="phoneForm.phone"
+                  type="tel"
+                  placeholder="请输入手机号"
+                  class="custom-input"
+                  maxlength="11"
+                />
+              </div>
+            </div>
+
+            <!-- 验证码输入 -->
+            <div class="input-group">
+              <div class="input-wrapper">
+                <IonIcon :icon="lockClosedOutline" class="input-icon" />
+                <input
+                  v-model="verificationCode"
+                  type="text"
+                  placeholder="请输入验证码"
+                  class="custom-input"
+                  maxlength="6"
+                />
+                <button
+                  type="button"
+                  class="code-btn"
+                  @click="sendCode"
+                  :disabled="codeLoading || countdown > 0 || phoneForm.phone.length !== 11"
+                >
+                  <span v-if="countdown > 0">{{ countdown }}s</span>
+                  <span v-else-if="codeLoading">发送中...</span>
+                  <span v-else>获取验证码</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- 登录按钮 -->
+            <button
+              class="login-btn"
+              @click="handleLogin"
+              :disabled="!canLogin"
+            >
+              <span v-if="!loginLoading">登录</span>
+              <div v-else class="loading-spinner"></div>
+            </button>
+
+            <!-- 社交登录图标 -->
+            <div class="social-icons">
+              <button class="social-icon wechat" @click="loginWithWechat" title="微信登录">
+                <IonIcon :icon="logoWechat" />
+              </button>
+              <button class="social-icon apple" @click="loginWithApple" title="Apple登录">
+                <IonIcon :icon="logoApple" />
+              </button>
+            </div>
           </div>
         </div>
-        
-        <!-- 第三方登录 -->
-        <div class="third-party-login">
-          <div class="divider">
-            <span>其他登录方式</span>
-          </div>
-          
-          <div class="social-buttons">
-            <ion-button fill="outline" size="large" @click="loginWithWechat">
-              <ion-icon :icon="logoWechat" slot="start"></ion-icon>
-              微信登录
-            </ion-button>
-            
-            <ion-button fill="outline" size="large" @click="loginWithQQ">
-              <ion-icon slot="start">Q</ion-icon>
-              QQ登录
-            </ion-button>
-          </div>
         </div>
-        
-        <!-- 用户协议 -->
-        <div class="terms">
-          <p>
-            登录即表示同意
-            <a href="#" @click="showTerms">用户协议</a>
-            和
-            <a href="#" @click="showPrivacy">隐私政策</a>
-          </p>
+
+        <!-- 下半部分：注册和协议 -->
+        <div class="bottom-section">
+          <!-- 注册提示 -->
+          <div class="register-section">
+            <p class="register-text">
+              还没有账号？
+              <button class="register-link" @click="goToRegister">立即注册</button>
+            </p>
+          </div>
+
+          <!-- 用户协议 -->
+          <div class="terms-section">
+            <p class="terms-text">
+              登录即表示同意
+              <a href="#" @click="showTerms">用户协议</a>
+              和
+              <a href="#" @click="showPrivacy">隐私政策</a>
+            </p>
+          </div>
         </div>
       </div>
-    </ion-content>
-  </ion-page>
+    </IonContent>
+  </IonPage>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonBackButton,
-  IonButton, IonIcon, IonInput, IonItem, IonLabel, IonNote, IonSegment,
-  IonSegmentButton, IonCheckbox, IonSpinner,
+  IonPage,
+  IonContent,
+  IonButton,
+  IonIcon,
   toastController
 } from '@ionic/vue'
-import { eyeOutline, eyeOffOutline, logoWechat } from 'ionicons/icons'
+import {
+  arrowBackOutline,
+  musicalNotesOutline,
+  callOutline,
+  mailOutline,
+  lockClosedOutline,
+  eyeOutline,
+  eyeOffOutline,
+  qrCodeOutline,
+  refreshOutline,
+  personOutline,
+  personAddOutline,
+  chevronForwardOutline,
+  logoWechat,
+  logoApple
+} from 'ionicons/icons'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '../../stores/user'
 
 const router = useRouter()
 const userStore = useUserStore()
 
-const loginMethod = ref<'phone' | 'email'>('phone')
-const showPassword = ref(false)
-const useCaptcha = ref(false)
-const captchaCountdown = ref(0)
+// 登录方式
+const loginMethods = [
+  { value: 'phone', label: '手机号', icon: callOutline },
+  { value: 'email', label: '邮箱', icon: mailOutline },
+  { value: 'qr', label: '扫码', icon: qrCodeOutline }
+]
+
+const loginMethod = ref('phone')
+const verificationCode = ref('')
+const countdown = ref(0)
+const codeLoading = ref(false)
+const loginLoading = ref(false)
+const guestLoading = ref(false)
 
 const phoneForm = ref({
   phone: '',
   password: '',
-  captcha: '',
   phoneError: '',
   passwordError: ''
 })
 
 const emailForm = ref({
   email: '',
-  password: '',
-  emailError: '',
-  passwordError: ''
+  password: ''
 })
 
-const { loginLoading } = userStore
-
-const isFormValid = computed(() => {
-  if (loginMethod.value === 'phone') {
-    return phoneForm.value.phone && 
-           phoneForm.value.password && 
-           !phoneForm.value.phoneError && 
-           !phoneForm.value.passwordError &&
-           (!useCaptcha.value || phoneForm.value.captcha)
-  } else {
-    return emailForm.value.email && 
-           emailForm.value.password && 
-           !emailForm.value.emailError && 
-           !emailForm.value.passwordError
-  }
+// 计算属性
+const canLogin = computed(() => {
+  return phoneForm.value.phone.length === 11 && verificationCode.value.length >= 4
 })
 
-const validatePhone = () => {
-  const phone = phoneForm.value.phone
-  if (!phone) {
-    phoneForm.value.phoneError = '请输入手机号'
-  } else if (!/^1[3-9]\d{9}$/.test(phone)) {
-    phoneForm.value.phoneError = '请输入正确的手机号'
-  } else {
-    phoneForm.value.phoneError = ''
-  }
-}
-
-const validateEmail = () => {
-  const email = emailForm.value.email
-  if (!email) {
-    emailForm.value.emailError = '请输入邮箱'
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    emailForm.value.emailError = '请输入正确的邮箱格式'
-  } else {
-    emailForm.value.emailError = ''
-  }
-}
-
-const validatePassword = () => {
-  const password = loginMethod.value === 'phone' ? phoneForm.value.password : emailForm.value.password
-  if (!password) {
-    const errorMsg = '请输入密码'
-    if (loginMethod.value === 'phone') {
-      phoneForm.value.passwordError = errorMsg
-    } else {
-      emailForm.value.passwordError = errorMsg
-    }
-  } else if (password.length < 6) {
-    const errorMsg = '密码长度不能少于6位'
-    if (loginMethod.value === 'phone') {
-      phoneForm.value.passwordError = errorMsg
-    } else {
-      emailForm.value.passwordError = errorMsg
-    }
-  } else {
-    if (loginMethod.value === 'phone') {
-      phoneForm.value.passwordError = ''
-    } else {
-      emailForm.value.passwordError = ''
-    }
-  }
-}
-
-const togglePassword = () => {
-  showPassword.value = !showPassword.value
-}
-
-const sendCaptcha = async () => {
-  if (!phoneForm.value.phone) {
-    showToast('请先输入手机号')
+// 方法
+const sendCode = async () => {
+  if (!phoneForm.value.phone || phoneForm.value.phone.length !== 11) {
+    const toast = await toastController.create({
+      message: '请输入正确的手机号',
+      duration: 2000,
+      position: 'bottom',
+      color: 'warning'
+    })
+    await toast.present()
     return
   }
-  
+
+  codeLoading.value = true
   try {
     await userStore.sendCaptcha(phoneForm.value.phone)
-    showToast('验证码已发送')
-    startCountdown()
-  } catch (error) {
-    showToast('发送失败，请重试')
-  }
-}
 
-const startCountdown = () => {
-  captchaCountdown.value = 60
-  const timer = setInterval(() => {
-    captchaCountdown.value--
-    if (captchaCountdown.value <= 0) {
-      clearInterval(timer)
-    }
-  }, 1000)
+    const toast = await toastController.create({
+      message: '验证码已发送',
+      duration: 2000,
+      position: 'bottom',
+      color: 'success'
+    })
+    await toast.present()
+
+    // 开始倒计时
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+
+  } catch (error) {
+    const toast = await toastController.create({
+      message: '发送失败，请重试',
+      duration: 3000,
+      position: 'bottom',
+      color: 'danger'
+    })
+    await toast.present()
+  } finally {
+    codeLoading.value = false
+  }
 }
 
 const handleLogin = async () => {
+  loginLoading.value = true
   try {
-    if (loginMethod.value === 'phone') {
-      if (useCaptcha.value) {
-        await userStore.loginWithPhone(
-          phoneForm.value.phone, 
-          phoneForm.value.password, 
-          phoneForm.value.captcha
-        )
-      } else {
-        await userStore.loginWithPhone(phoneForm.value.phone, phoneForm.value.password)
-      }
-    } else {
-      await userStore.loginWithEmail(emailForm.value.email, emailForm.value.password)
-    }
-    
-    showToast('登录成功')
-    router.push('/tabs/my')
+    await userStore.loginWithCaptcha(phoneForm.value.phone, verificationCode.value)
+
+    const toast = await toastController.create({
+      message: '登录成功',
+      duration: 2000,
+      position: 'bottom',
+      color: 'success'
+    })
+    await toast.present()
+
+    router.push('/tabs/home')
   } catch (error) {
-    showToast(error instanceof Error ? error.message : '登录失败')
+    console.error('登录失败:', error)
+    const toast = await toastController.create({
+      message: '登录失败，请检查验证码',
+      duration: 3000,
+      position: 'bottom',
+      color: 'danger'
+    })
+    await toast.present()
+  } finally {
+    loginLoading.value = false
   }
 }
 
-const forgotPassword = () => {
-  showToast('功能开发中')
+const handleGuestLogin = async () => {
+  guestLoading.value = true
+  try {
+    await userStore.loginAsGuest()
+
+    const toast = await toastController.create({
+      message: '游客登录成功，开始体验音乐之旅！',
+      duration: 2000,
+      position: 'bottom',
+      color: 'success'
+    })
+    await toast.present()
+
+    router.push('/tabs/home')
+  } catch (error) {
+    const toast = await toastController.create({
+      message: '游客登录失败，请重试',
+      duration: 3000,
+      position: 'bottom',
+      color: 'danger'
+    })
+    await toast.present()
+  } finally {
+    guestLoading.value = false
+  }
 }
 
-const goToRegister = () => {
-  showToast('功能开发中')
+const refreshQR = () => {
+  console.log('刷新二维码')
+}
+
+const forgotPassword = () => {
+  console.log('忘记密码')
 }
 
 const loginWithWechat = () => {
-  showToast('微信登录功能开发中')
+  console.log('微信登录')
 }
 
-const loginWithQQ = () => {
-  showToast('QQ登录功能开发中')
+const loginWithApple = () => {
+  console.log('Apple登录')
+}
+
+const goToRegister = () => {
+  console.log('跳转注册')
 }
 
 const showTerms = () => {
-  showToast('用户协议功能开发中')
+  console.log('显示用户协议')
 }
 
 const showPrivacy = () => {
-  showToast('隐私政策功能开发中')
-}
-
-const showToast = async (message: string) => {
-  const toast = await toastController.create({
-    message,
-    duration: 2000,
-    position: 'bottom'
-  })
-  await toast.present()
+  console.log('显示隐私政策')
 }
 </script>
 
 <style scoped>
-.login-content {
-  --padding-start: 0;
-  --padding-end: 0;
+.login-page {
+  background: var(--s-background);
 }
 
 .login-container {
-  min-height: 100vh;
+  padding: 12px 16px 16px 16px;
+  max-width: 100%;
+  margin: 0 auto;
+  height: calc(100vh - 60px);
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  justify-content: space-between;
 }
 
-.logo-section {
+.top-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.bottom-section {
+  flex-shrink: 0;
+}
+
+/* 顶部按钮 */
+.top-buttons {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 10;
+}
+
+ion-button.back-btn {
+  --color: var(--s-text-primary);
+  --background: var(--s-surface);
+  --border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  --box-shadow: 0 2px 8px var(--s-shadow);
+}
+
+ion-button.guest-btn {
+  --color: var(--s-text-secondary);
+  --background: var(--s-surface);
+  --border-radius: 20px;
+  width: auto;
+  height: 36px;
+  --padding-start: 12px;
+  --padding-end: 8px;
+  --box-shadow: 0 2px 8px var(--s-shadow);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.guest-btn ion-icon {
+  margin-left: 4px;
+  font-size: 16px;
+}
+
+/* 欢迎头部 - 参照首页样式 */
+.welcome-header {
+  margin-bottom: 20px;
+  padding: 4px 0;
   text-align: center;
-  padding: 40px 0 60px;
 }
 
-.logo {
+.app-logo {
   width: 80px;
   height: 80px;
-  border-radius: 16px;
-  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--s-primary) 0%, var(--s-primary-dark) 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 24px;
+  box-shadow: 0 4px 16px var(--s-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.app-name {
+.app-logo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--s-shadow);
+}
+
+.app-logo ion-icon {
+  font-size: 40px;
+  color: white;
+}
+
+.greeting {
   font-size: 32px;
-  font-weight: bold;
-  margin: 0 0 8px;
-  color: var(--ion-color-primary);
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  background: linear-gradient(135deg, var(--s-text-primary) 0%, var(--s-primary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
 }
 
-.app-slogan {
-  font-size: 16px;
-  color: var(--ion-color-step-600);
+.subtitle {
+  font-size: 15px;
   margin: 0;
+  color: var(--s-text-secondary);
+  font-weight: 400;
+  letter-spacing: 0.2px;
 }
 
-.login-form {
+
+
+/* 主登录表单 */
+.main-form {
+  background: var(--s-surface);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px var(--s-shadow);
+  position: relative;
   flex: 1;
 }
 
-.login-method {
-  margin-bottom: 24px;
-}
-
-.form-fields {
-  margin-bottom: 24px;
-}
-
-.form-fields ion-item {
+.input-group {
   margin-bottom: 16px;
-  --border-radius: 8px;
-  --background: var(--ion-color-step-50);
 }
 
-.captcha-option {
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--s-surface);
+  border: 1.5px solid #d0d0d0;
+  border-radius: 12px;
+  padding: 0 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.input-wrapper:focus-within {
+  border-color: var(--s-primary);
+  box-shadow: 0 0 0 1px var(--s-primary-light);
+}
+
+.input-icon {
+  color: #6c757d;
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.custom-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 12px 0;
+  font-size: 15px;
+  color: var(--s-text-primary);
+  outline: none;
+}
+
+.custom-input::placeholder {
+  color: #6c757d;
+}
+
+.password-toggle {
+  border: none;
+  background: transparent;
+  color: #6c757d;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.password-toggle:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.input-error {
+  color: var(--ion-color-danger);
+  font-size: 14px;
+  margin-top: 8px;
+  margin-left: 16px;
+}
+
+/* 验证码按钮 */
+.code-btn {
+  border: none;
+  background: var(--s-surface-variant);
+  color: var(--s-text-secondary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.code-btn:not(:disabled) {
+  background: var(--s-primary);
+  color: white;
+}
+
+.code-btn:disabled {
+  background: var(--s-surface-variant);
+  color: var(--s-text-secondary);
+  cursor: not-allowed;
+}
+
+/* 社交登录图标 */
+.social-icons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.social-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.social-icon:active {
+  transform: scale(0.9);
+}
+
+.social-icon.wechat {
+  background: #07c160;
+  color: white;
+}
+
+.social-icon.apple {
+  background: #000;
+  color: white;
+}
+
+.social-icon ion-icon {
+  font-size: 14px;
+}
+
+/* 表单选项 */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  margin-right: 8px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark {
+  background: var(--s-primary);
+  border-color: var(--s-primary);
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.checkbox-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.forgot-link {
+  border: none;
+  background: transparent;
+  color: var(--s-primary);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* 二维码内容 */
+.qr-content {
+  text-align: center;
+}
+
+.qr-wrapper {
+  margin-bottom: 24px;
+}
+
+.qr-code {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 24px;
+  border: 2px dashed #ddd;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+}
+
+.qr-placeholder ion-icon {
+  font-size: 48px;
+  color: #6c757d;
+  margin-bottom: 8px;
+}
+
+.qr-placeholder p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.qr-instructions {
+  text-align: left;
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 16px;
+}
+
+.qr-instructions h4 {
+  margin: 0 0 16px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.qr-instructions ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #666;
+}
+
+.qr-instructions li {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.refresh-qr-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 16px 0;
-  padding: 0 16px;
-}
-
-.captcha-label {
+  background: transparent;
+  border: 2px solid var(--s-primary);
+  color: var(--s-primary);
+  padding: 12px 24px;
+  border-radius: 12px;
   font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0 auto;
 }
 
-.login-button {
-  margin-top: 32px;
-  height: 48px;
-  --border-radius: 24px;
+.refresh-qr-btn:hover {
+  background: var(--s-primary);
+  color: white;
+}
+
+/* 操作按钮区域 */
+.action-section {
+  margin-bottom: 32px;
+}
+
+.login-btn {
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  background: var(--s-primary);
+  border: none;
+  border-radius: 24px;
+  padding: 14px;
+  color: white;
   font-size: 16px;
   font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px var(--s-shadow);
+  display: block;
 }
 
-.login-options {
-  margin: 24px 0;
-  text-align: center;
+.login-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--s-shadow);
 }
 
-.forgot-password {
-  margin-bottom: 16px;
+.login-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.forgot-password a {
-  color: var(--ion-color-primary);
-  text-decoration: none;
-  font-size: 14px;
+.guest-btn {
+  width: 100%;
+  background: transparent;
+  border: 2px solid #e9ecef;
+  border-radius: 16px;
+  padding: 14px 16px;
+  color: #6c757d;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.register-link {
-  font-size: 14px;
-  color: var(--ion-color-step-600);
+.guest-btn:hover:not(:disabled) {
+  border-color: var(--s-primary);
+  color: var(--s-primary);
+  background: var(--s-primary-tint);
 }
 
-.register-link a {
-  color: var(--ion-color-primary);
-  text-decoration: none;
-  margin-left: 4px;
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-.third-party-login {
-  margin: 32px 0;
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 其他登录方式 */
+.alternative-login {
+  margin-bottom: 32px;
 }
 
 .divider {
-  text-align: center;
-  margin-bottom: 24px;
   position: relative;
+  text-align: center;
+  margin: 24px 0;
 }
 
 .divider::before {
@@ -480,42 +784,223 @@ const showToast = async (message: string) => {
   left: 0;
   right: 0;
   height: 1px;
-  background: var(--ion-color-step-200);
+  background: var(--s-surface-variant);
 }
 
 .divider span {
-  background: var(--ion-background-color);
+  background: var(--s-background);
   padding: 0 16px;
-  color: var(--ion-color-step-600);
+  color: var(--s-text-secondary);
   font-size: 14px;
+  font-weight: 500;
 }
 
-.social-buttons {
-  display: flex;
+.social-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
 }
 
-.social-buttons ion-button {
-  flex: 1;
-  height: 44px;
-  --border-radius: 22px;
+.social-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 12px;
+  border: 2px solid var(--s-surface-variant);
+  border-radius: 16px;
+  background: var(--s-surface);
+  color: var(--s-text-secondary);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px var(--s-shadow);
+}
+
+.social-card:active {
+  transform: scale(0.95);
+}
+
+.social-card.wechat:hover {
+  border-color: #07c160;
+  background: rgba(7, 193, 96, 0.1);
+  color: #07c160;
+}
+
+.social-card.apple:hover {
+  border-color: #000;
+  background: rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+
+.social-card.qr:hover {
+  border-color: var(--s-primary);
+  background: var(--s-primary-light);
+  color: var(--s-primary);
+}
+
+.social-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--s-surface-variant);
+  transition: all 0.3s ease;
+}
+
+.social-card.wechat .social-icon {
+  background: linear-gradient(135deg, #07c160, #00a651);
+  color: white;
+}
+
+.social-card.apple .social-icon {
+  background: linear-gradient(135deg, #000, #333);
+  color: white;
+}
+
+.social-card.qr .social-icon {
+  background: linear-gradient(135deg, var(--s-primary), var(--s-primary-dark));
+  color: white;
+}
+
+.social-icon ion-icon {
+  font-size: 24px;
+}
+
+.social-card span {
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+}
+
+/* 底部区域 */
+.footer-section {
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.register-prompt {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.register-prompt span {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+.register-link {
+  border: none;
+  background: transparent;
+  color: var(--s-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 8px;
 }
 
 .terms {
   text-align: center;
-  margin-top: auto;
-  padding-top: 20px;
 }
 
 .terms p {
   font-size: 12px;
-  color: var(--ion-color-step-600);
+  color: #6c757d;
   line-height: 1.5;
   margin: 0;
 }
 
 .terms a {
-  color: var(--ion-color-primary);
+  color: var(--s-primary);
   text-decoration: none;
+}
+
+/* 注册区域 */
+.register-section {
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.register-text {
+  margin: 0;
+  color: var(--s-text-secondary);
+  font-size: 15px;
+}
+
+.register-link {
+  border: none;
+  background: transparent;
+  color: var(--s-primary);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 4px;
+}
+
+/* 用户协议 */
+.terms-section {
+  text-align: center;
+  padding-bottom: 8px;
+}
+
+.terms-text {
+  font-size: 12px;
+  color: var(--s-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.terms-text a {
+  color: var(--s-primary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.terms-text a:hover {
+  text-decoration: underline;
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 12px 12px 120px 12px;
+  }
+
+  .method-selector {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .social-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .app-logo {
+    width: 60px;
+    height: 60px;
+  }
+
+  .greeting {
+    font-size: 24px;
+  }
+}
+
+/* 动画效果 */
+.form-content {
+  animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

@@ -10,7 +10,7 @@
         </IonButtons>
       </IonToolbar>
     </IonHeader>
-    
+
     <IonContent :fullscreen="true">
       <div class="discover-page">
         <!-- 搜索栏 -->
@@ -20,7 +20,7 @@
             <span class="search-placeholder">搜索歌曲、歌手、专辑</span>
           </div>
         </div>
-        
+
         <!-- 快速导航 -->
         <div class="quick-nav">
           <div class="nav-grid">
@@ -30,21 +30,21 @@
               </div>
               <span class="nav-label">排行榜</span>
             </div>
-            
+
             <div class="nav-item" @click="goToPlaylists">
               <div class="nav-icon playlists">
                 <IonIcon :icon="albumsOutline" />
               </div>
               <span class="nav-label">歌单广场</span>
             </div>
-            
+
             <div class="nav-item" @click="goToNewSongs">
               <div class="nav-icon new-songs">
                 <IonIcon :icon="sparklesOutline" />
               </div>
               <span class="nav-label">新歌速递</span>
             </div>
-            
+
             <div class="nav-item" @click="goToArtists">
               <div class="nav-icon artists">
                 <IonIcon :icon="peopleOutline" />
@@ -53,7 +53,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 热门歌单 -->
         <section class="content-section">
           <div class="section-header">
@@ -63,17 +63,17 @@
               <IonIcon :icon="chevronForwardOutline" />
             </IonButton>
           </div>
-          
+
           <div class="playlist-grid">
-            <div 
-              v-for="playlist in hotPlaylists" 
+            <div
+              v-for="playlist in hotPlaylists"
               :key="playlist.id"
               class="playlist-card"
               @click="goToPlaylist(playlist.id)"
             >
               <div class="playlist-cover">
-                <img 
-                  :src="playlist.cover" 
+                <img
+                  :src="playlist.cover"
                   :alt="playlist.name"
                   @error="handleImageError"
                 />
@@ -90,7 +90,7 @@
             </div>
           </div>
         </section>
-        
+
         <!-- 推荐歌手 -->
         <section class="content-section">
           <div class="section-header">
@@ -100,17 +100,17 @@
               <IonIcon :icon="chevronForwardOutline" />
             </IonButton>
           </div>
-          
+
           <div class="artist-grid">
-            <div 
-              v-for="artist in recommendedArtists" 
+            <div
+              v-for="artist in recommendedArtists"
               :key="artist.id"
               class="artist-card"
               @click="goToArtist(artist.id)"
             >
               <div class="artist-avatar">
-                <img 
-                  :src="artist.cover" 
+                <img
+                  :src="artist.cover"
                   :alt="artist.name"
                   @error="handleImageError"
                 />
@@ -120,7 +120,7 @@
             </div>
           </div>
         </section>
-        
+
         <!-- 榜单推荐 -->
         <section class="content-section">
           <div class="section-header">
@@ -130,17 +130,17 @@
               <IonIcon :icon="chevronForwardOutline" />
             </IonButton>
           </div>
-          
+
           <div class="ranking-list">
-            <div 
-              v-for="(ranking, index) in topRankings" 
+            <div
+              v-for="(ranking, index) in topRankings"
               :key="ranking.id"
               class="ranking-item"
               @click="goToPlaylist(ranking.id)"
             >
               <div class="ranking-cover">
-                <img 
-                  :src="ranking.cover" 
+                <img
+                  :src="ranking.cover"
                   :alt="ranking.name"
                   @error="handleImageError"
                 />
@@ -149,8 +149,8 @@
               <div class="ranking-info">
                 <h3 class="ranking-name">{{ ranking.name }}</h3>
                 <div class="ranking-songs">
-                  <div 
-                    v-for="(song, songIndex) in ranking.topSongs" 
+                  <div
+                    v-for="(song, songIndex) in ranking.topSongs"
                     :key="song.id"
                     class="song-item"
                   >
@@ -210,15 +210,15 @@ const openSearch = () => {
 }
 
 const goToRanking = () => {
-  router.push('/discover/ranking')
+  router.push('/discover/rankings')
 }
 
 const goToPlaylists = () => {
-  router.push('/discover/playlists')
+  router.push('/discover/playlist-square')
 }
 
 const goToNewSongs = () => {
-  router.push('/discover/new-songs')
+  router.push('/discover/new-music')
 }
 
 const goToArtists = () => {
@@ -551,15 +551,15 @@ onMounted(() => {
   .playlist-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .artist-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .nav-grid {
     gap: 12px;
   }
-  
+
   .nav-icon {
     width: 48px;
     height: 48px;

@@ -1,10 +1,9 @@
 // 移动端API模块
 import axios from 'axios'
-import { useUserStore } from '@/stores/user'
 
 // 创建API实例
 const api = axios.create({
-  baseURL: 'https://netease-proxy-server.onrender.com',
+  baseURL: '/api',
   timeout: 30000, // 远程服务器，增加超时时间
   headers: {
     'Content-Type': 'application/json'
@@ -14,10 +13,11 @@ const api = axios.create({
 // 请求拦截器
 api.interceptors.request.use(
   (config) => {
-    // 添加用户认证信息
-    const userStore = useUserStore()
-    if (userStore.token) {
-      config.headers.Authorization = `Bearer ${userStore.token}`
+    // 添加时间戳防止缓存
+    if (config.params) {
+      config.params.timestamp = Date.now()
+    } else {
+      config.params = { timestamp: Date.now() }
     }
     return config
   },
@@ -40,12 +40,12 @@ api.interceptors.response.use(
     console.error('API Error:', error)
     // 移动端错误处理
     if (error.response?.status === 401) {
-      // 未授权，跳转登录
-      const userStore = useUserStore()
-      userStore.logout()
+      // 未授权，可以在这里处理登录跳转
+      console.warn('用户未授权，需要登录')
     }
     return Promise.reject(error)
   }
 )
 
 export { api }
+export default api

@@ -52,7 +52,7 @@
 
                 <div class="creator-info">
                   <img
-                    :src="playlistInfo?.creator?.avatar || '/images/default-avatar.jpg'"
+                    :src="playlistInfo?.creator?.avatar || ''"
                     :alt="playlistInfo?.creator?.name"
                     class="creator-avatar"
                     @error="handleAvatarError"
@@ -377,7 +377,7 @@ const handleImageError = (event: Event) => {
 
 const handleAvatarError = (event: Event) => {
   const target = event.target as HTMLImageElement
-  target.src = '/images/default-avatar.jpg'
+  target.style.display = 'none'
 }
 
 // 生命周期
