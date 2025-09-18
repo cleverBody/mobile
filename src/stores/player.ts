@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
-import { Howl } from 'howler'
-import { useMusicStore } from './music'
-import { musicApi } from '@/api/music'
+import { defineStore } from "pinia";
+import { computed, ref, watch } from "vue";
+import { Howl } from "howler";
+import { useMusicStore } from "./music";
+import { musicApi } from "@/api/music";
 
 export const usePlayerStore = defineStore('player', () => {
   // 状态
@@ -13,28 +13,28 @@ export const usePlayerStore = defineStore('player', () => {
   const playMode = ref<'order' | 'random' | 'repeat'>('order') // 播放模式
   const isLoading = ref(false)
   const error = ref<string | null>(null)
-  
+
   // Howler 实例
   let howlInstance: Howl | null = null
   let progressTimer: number | null = null
-  
+
   // 计算属性
   const progressPercent = computed(() => {
     return duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0
   })
-  
+
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60)
     const seconds = Math.floor(time % 60)
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
-  
+
   const currentTimeFormatted = computed(() => formatTime(currentTime.value))
   const durationFormatted = computed(() => formatTime(duration.value))
-  
+
   // 获取音乐store
   const musicStore = useMusicStore()
-  
+
   // 获取歌曲播放URL
   const getSongPlayUrl = async (songId: number): Promise<string | null> => {
     try {
@@ -54,7 +54,7 @@ export const usePlayerStore = defineStore('player', () => {
       return null
     }
   }
-  
+
   // 方法
   const initPlayer = async (url: string) => {
     try {
@@ -62,13 +62,13 @@ export const usePlayerStore = defineStore('player', () => {
       if (howlInstance) {
         howlInstance.unload()
       }
-      
+
       // 重置状态
       isLoading.value = true
       error.value = null
       currentTime.value = 0
       duration.value = 0
-      
+
       howlInstance = new Howl({
         src: [url],
         html5: true,
@@ -113,7 +113,7 @@ export const usePlayerStore = defineStore('player', () => {
       error.value = '初始化失败'
     }
   }
-  
+
   const play = () => {
     if (howlInstance && !isLoading.value) {
       try {
@@ -124,7 +124,7 @@ export const usePlayerStore = defineStore('player', () => {
       }
     }
   }
-  
+
   const pause = () => {
     if (howlInstance) {
       try {
@@ -134,7 +134,31 @@ export const usePlayerStore = defineStore('player', () => {
       }
     }
   }
-  
+
+  // 切换播放/暂停状态
+  const togglePlay = async () => {
+    if (isPlaying.value) {
+      // 当前正在播放，暂停
+      pause()
+    } else {
+      // 当前暂停，开始播放
+      if (howlInstance) {
+        // 有音频实例，直接播放
+        play()
+      } else {
+        // 没有音频实例，重新加载当前歌曲
+        const currentSong = musicStore.currentSong
+        if (currentSong && currentSong.id) {
+          try {
+            await musicStore.loadAndPlaySong(currentSong)
+          } catch (error) {
+            console.error('重新加载歌曲失败:', error)
+          }
+        }
+      }
+    }
+  }
+
   const stop = () => {
     if (howlInstance) {
       try {
@@ -144,7 +168,7 @@ export const usePlayerStore = defineStore('player', () => {
       }
     }
   }
-  
+
   const seek = (time: number) => {
     if (howlInstance && duration.value > 0) {
       try {
@@ -157,7 +181,7 @@ export const usePlayerStore = defineStore('player', () => {
       }
     }
   }
-  
+
   const setVolume = (vol: number) => {
     // 确保音量在0-1范围内
     const newVolume = Math.max(0, Math.min(vol, 1))
@@ -170,16 +194,13 @@ export const usePlayerStore = defineStore('player', () => {
       }
     }
   }
-  
+
   const startProgressTimer = () => {
     stopProgressTimer()
     progressTimer = window.setInterval(() => {
       if (howlInstance && isPlaying.value) {
         try {
-          const seek = howlInstance.seek()
-          if (typeof seek === 'number') {
-            currentTime.value = seek
-          }
+          currentTime.value = howlInstance.seek()
         } catch (err) {
           console.error('获取播放进度失败:', err)
           stopProgressTimer()
@@ -187,14 +208,14 @@ export const usePlayerStore = defineStore('player', () => {
       }
     }, 100) // 每100ms更新一次进度
   }
-  
+
   const stopProgressTimer = () => {
     if (progressTimer) {
       clearInterval(progressTimer)
       progressTimer = null
     }
   }
-  
+
   const handleSongEnd = () => {
     switch (playMode.value) {
       case 'order':
@@ -222,24 +243,24 @@ export const usePlayerStore = defineStore('player', () => {
         break
     }
   }
-  
+
   const nextSong = () => {
     if (musicStore.hasNext) {
       musicStore.nextSong()
     }
   }
-  
+
   const prevSong = () => {
     if (musicStore.hasPrev) {
       musicStore.prevSong()
     }
   }
-  
+
   const togglePlayMode = () => {
     const modes: Array<'order' | 'random' | 'repeat'> = ['order', 'random', 'repeat']
     const currentIndex = modes.indexOf(playMode.value)
     playMode.value = modes[(currentIndex + 1) % modes.length]
-    
+
     // 提示用户当前播放模式
     const modeNames = {
       'order': '顺序播放',
@@ -248,7 +269,7 @@ export const usePlayerStore = defineStore('player', () => {
     }
     console.log('切换播放模式:', modeNames[playMode.value])
   }
-  
+
   const resetPlayer = () => {
     stop()
     currentTime.value = 0
@@ -256,20 +277,20 @@ export const usePlayerStore = defineStore('player', () => {
     error.value = null
     isLoading.value = false
   }
-  
+
   // 监听当前歌曲变化，自动加载新歌曲
   watch(
     () => musicStore.currentSong,
     async (newSong, oldSong) => {
       if (newSong && newSong.id !== oldSong?.id) {
         console.log('歌曲变化，加载新歌曲:', newSong.name)
-        
+
         try {
           // 获取真实的播放URL
           const realUrl = await getSongPlayUrl(newSong.id)
           if (realUrl) {
             await initPlayer(realUrl)
-            
+
             // 如果之前在播放，新歌曲加载完成后自动播放
             if (oldSong && isPlaying.value) {
               play()
@@ -286,14 +307,14 @@ export const usePlayerStore = defineStore('player', () => {
     },
     { immediate: false }
   )
-  
+
   // 监听音量变化
   watch(volume, (newVolume) => {
     if (howlInstance) {
       howlInstance.volume(newVolume)
     }
   })
-  
+
   return {
     // 状态
     isPlaying,
@@ -303,16 +324,17 @@ export const usePlayerStore = defineStore('player', () => {
     playMode,
     isLoading,
     error,
-    
+
     // 计算属性
     progressPercent,
     currentTimeFormatted,
     durationFormatted,
-    
+
     // 方法
     initPlayer,
     play,
     pause,
+    togglePlay,
     stop,
     seek,
     setVolume,

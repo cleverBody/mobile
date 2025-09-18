@@ -186,8 +186,14 @@ export const useMusicStore = defineStore('music', () => {
   }
 
   // 播放/暂停切换
-  const togglePlay = () => {
-    if (!howl) return
+  const togglePlay = async () => {
+    if (!howl) {
+    // 没有音频实例，重新加载当前歌曲
+    if (currentSong.value && currentSong.value.id) {
+      await loadAndPlaySong(currentSong.value)
+    }
+    return
+  }
 
     if (isPlaying.value) {
       howl.pause()
@@ -294,7 +300,7 @@ export const useMusicStore = defineStore('music', () => {
       if (howl && isPlaying.value) {
         currentTime.value = howl.seek() as number
       }
-    }, 1000)
+    }, 1000) as unknown as number
   }
 
   // 停止更新计时器
@@ -362,6 +368,7 @@ export const useMusicStore = defineStore('music', () => {
 
     // 方法
     setCurrentSong,
+    loadAndPlaySong,
     setPlaylist,
     togglePlay,
     play,
