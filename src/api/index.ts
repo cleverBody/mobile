@@ -1,9 +1,29 @@
 // 移动端API模块
 import axios from 'axios'
 
+// 获取API基础URL
+const getBaseURL = () => {
+  // 更可靠的APK环境检测
+  const isAPK = window.location.protocol === 'capacitor:' ||
+                window.location.protocol === 'file:' ||
+                !import.meta.env.DEV ||
+                (typeof window !== 'undefined' && (window as any).Capacitor)
+
+  // APK环境直接使用远程服务器
+  if (isAPK) {
+    console.log('🔍 index.ts: 检测到APK环境，使用远程服务器')
+    console.log('🔍 protocol:', window.location.protocol, 'DEV:', import.meta.env.DEV, 'Capacitor:', !!(window as any).Capacitor)
+    return 'https://netease-proxy-server.onrender.com/api'
+  }
+
+  // 浏览器开发环境使用代理
+  console.log('🔍 index.ts: 检测到浏览器环境，使用代理')
+  return '/api'
+}
+
 // 创建API实例
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: getBaseURL(),
   timeout: 30000, // 远程服务器，增加超时时间
   headers: {
     'Content-Type': 'application/json'
