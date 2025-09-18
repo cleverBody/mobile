@@ -9,14 +9,15 @@ const config: CapacitorConfig = {
     allowNavigation: [
       'https://netease-proxy-server.onrender.com',
       'https://*.music.126.net',
-      'https://*.netease.com'
+      'https://*.netease.com',
+      'http://*.music.126.net'
     ]
   },
   android: {
-    // 允许HTTP请求（如果需要）
+    // 允许HTTP请求和混合内容
     allowMixedContent: true,
-    // 网络安全配置
-    useCleartextTraffic: false
+    // 允许明文流量
+    useCleartextTraffic: true
   }
 };
 

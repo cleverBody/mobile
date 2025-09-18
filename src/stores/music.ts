@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { Howl } from 'howler'
 import { musicApi } from '@/api/music'
+import { toastController } from '@ionic/vue'
 
 export interface Song {
   id: number
@@ -40,6 +41,17 @@ export interface User {
   id: number
   nickname: string
   avatar?: string
+}
+
+// 显示Toast提示的辅助函数
+const showToast = async (message: string, color: 'success' | 'warning' | 'danger' = 'danger') => {
+  const toast = await toastController.create({
+    message,
+    duration: 3000,
+    position: 'top',
+    color
+  })
+  await toast.present()
 }
 
 export const useMusicStore = defineStore('music', () => {
@@ -84,52 +96,92 @@ export const useMusicStore = defineStore('music', () => {
   // 加载并播放歌曲
   const loadAndPlaySong = async (song: Song) => {
     try {
+      console.log('🎵 开始加载歌曲:', song.name)
+      alert(`开始加载歌曲: ${song.name}`)
+
+      alert('步骤1: 准备停止当前播放')
       // 停止当前播放
       if (howl) {
+        alert('步骤2: 发现现有howl实例，正在停止')
         howl.stop()
         howl.unload()
+        alert('步骤3: howl实例已停止和卸载')
+      } else {
+        alert('步骤2: 没有现有howl实例')
       }
 
+      alert('步骤4: 开始检测移动端环境')
+      // 检测移动端环境
+      const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                      window.location.protocol === 'capacitor:' ||
+                      (typeof window !== 'undefined' && (window as any).Capacitor)
+
+      alert(`步骤5: 移动端检测完成，结果: ${isMobile}`)
+      console.log('🎵 移动端检测:', isMobile, 'protocol:', window.location.protocol)
+
+      alert("步骤6: 跳过移动端音频权限处理，直接获取歌曲URL")
       // 获取歌曲播放URL
+      console.log('🎵 获取歌曲播放URL...')
+      alert(`开始获取歌曲URL，歌曲ID: ${song.id}`)
+
       const urlResponse = await musicApi.getSongUrl(song.id)
+      alert(`API响应: ${JSON.stringify(urlResponse)}`)
+
       const songUrl = urlResponse.data?.[0]?.url
+      alert(`解析出的URL: ${songUrl}`)
 
       if (!songUrl) {
-        console.error('无法获取歌曲播放链接')
+        console.error('❌ 无法获取歌曲播放链接')
+        alert(`❌ 无法获取歌曲播放链接: ${song.name}`)
         return
       }
 
+      console.log('✅ 获取到播放URL:', songUrl)
+
       // 创建新的Howl实例
+      console.log('🎵 创建Howl实例...')
       howl = new Howl({
         src: [songUrl],
-        html5: true,
+        html5: false,
         volume: volume.value,
+        preload: isMobile ? 'metadata' : true,
         onload: () => {
           duration.value = howl?.duration() || 0
+          console.log('✅ 音频加载完成，时长:', duration.value)
+          showToast(`音频加载完成: ${song.name}`, 'success')
         },
         onplay: () => {
           isPlaying.value = true
           startUpdateTimer()
+          console.log('✅ 开始播放')
         },
         onpause: () => {
           isPlaying.value = false
           stopUpdateTimer()
+          console.log('⏸️ 暂停播放')
         },
         onend: () => {
           isPlaying.value = false
           nextSong()
-        },
-        onerror: (id, error) => {
-          console.error('播放错误:', error)
-          isPlaying.value = false
+          console.log('⏹️ 播放结束')
         }
       })
 
       // 开始播放
-      howl.play()
+      console.log('🎵 尝试开始播放...')
+      try {
+        howl.play()
+        console.log('✅ 播放命令已发送')
+        alert(`✅ 播放命令已发送: ${song.name}`)
+      } catch (playError) {
+        console.error('❌ 播放失败:', playError)
+        alert(`❌ 播放失败: ${playError}`)
+      }
+
 
     } catch (error) {
       console.error('加载歌曲失败:', error)
+      alert(`❌ 加载歌曲失败: ${error}`)
     }
   }
 
