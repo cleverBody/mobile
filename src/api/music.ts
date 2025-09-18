@@ -1,9 +1,29 @@
 import axios from 'axios'
 import type { Song, Playlist, Album, Artist } from '@/stores/music'
 
+// 获取API基础URL
+const getBaseURL = () => {
+  // 更可靠的APK环境检测
+  const isAPK = window.location.protocol === 'capacitor:' ||
+                window.location.protocol === 'file:' ||
+                !import.meta.env.DEV ||
+                (typeof window !== 'undefined' && (window as any).Capacitor)
+
+  // APK环境直接使用远程服务器
+  if (isAPK) {
+    console.log('🔍 music.ts: 检测到APK环境，使用远程服务器')
+    console.log('🔍 protocol:', window.location.protocol, 'DEV:', import.meta.env.DEV, 'Capacitor:', !!(window as any).Capacitor)
+    return 'https://netease-proxy-server.onrender.com/api'
+  }
+
+  // 浏览器开发环境使用代理
+  console.log('🔍 music.ts: 检测到浏览器环境，使用代理')
+  return '/api'
+}
+
 // API基础配置
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: getBaseURL(),
   timeout: 10000,
 })
 
@@ -28,6 +48,7 @@ api.interceptors.response.use(
   (response) => {
     // 网易云音乐API返回格式: {success: true, data: {...}}
     if (response.data.success && response.data.data) {
+      // 直接返回整个data对象，保持原有的数据结构
       return response.data.data
     }
     // 如果没有success字段，直接返回data（某些接口可能不同）

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { apiRequest } from '@/utils/api'
 
 export interface UserProfile {
   id: number
@@ -81,7 +82,7 @@ export const useUserStore = defineStore('user', () => {
     try {
       const phoneNumber = parseInt(phone)
       const captchaNumber = parseInt(captcha)
-      const response = await fetch(`/api/login_cellphone?phone=${phoneNumber}&captcha=${captchaNumber}&countrycode=86&noCookie=true&timestamp=${Date.now()}`)
+      const response = await apiRequest(`/login_cellphone?phone=${phoneNumber}&captcha=${captchaNumber}&countrycode=86&noCookie=true&timestamp=${Date.now()}`)
       const data = await response.json()
 
       if (data.success && data.data.code === 200) {
@@ -121,7 +122,7 @@ export const useUserStore = defineStore('user', () => {
   const sendCaptcha = async (phone: string) => {
     try {
       const phoneNumber = parseInt(phone)
-      const response = await fetch(`/api/netease/captcha/sent?phone=${phoneNumber}&ctcode=86&noCookie=true&timestamp=${Date.now()}`)
+      const response = await apiRequest(`/captcha_sent?phone=${phoneNumber}&ctcode=86&noCookie=true&timestamp=${Date.now()}`)
       const data = await response.json()
 
       if (data.success && data.data.code === 200) {
@@ -139,7 +140,7 @@ export const useUserStore = defineStore('user', () => {
     loginLoading.value = true
     try {
       // 调用游客登录API
-      const response = await fetch('/api/register_anonimous?timestamp=' + Date.now())
+      const response = await apiRequest('/register_anonimous?timestamp=' + Date.now())
 
       if (!response.ok) {
         throw new Error('游客登录失败')

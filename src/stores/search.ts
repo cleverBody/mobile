@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { apiRequest } from '@/utils/api'
 
 export interface SearchResults {
   songs: Array<{
@@ -48,7 +49,7 @@ export const useSearchStore = defineStore('search', () => {
   // 方法
   const loadSuggestions = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/netease/search/hot/detail?realIP=116.25.146.177')
+      const response = await apiRequest('/search/hot/detail?realIP=116.25.146.177')
       const data = await response.json()
 
       // 处理桌面应用相同的响应格式
@@ -79,7 +80,7 @@ export const useSearchStore = defineStore('search', () => {
     loading.value = true
     try {
       // 调用搜索建议接口 - 与桌面应用保持一致
-      const response = await fetch(`http://localhost:3000/api/search/suggest?keywords=${encodeURIComponent(query)}&realIP=116.25.146.177`)
+      const response = await apiRequest(`/search/suggest?keywords=${encodeURIComponent(query)}&realIP=116.25.146.177`)
       const data = await response.json()
 
       // 按照实际API响应结构处理数据
