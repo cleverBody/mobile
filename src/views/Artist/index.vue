@@ -55,9 +55,15 @@
                 <span>{{ currentArtist?.albumsCount || 0 }}张专辑</span>
               </div>
 
-              <p v-if="currentArtist?.description" class="artist-description">
-                {{ currentArtist.description }}
-              </p>
+              <div v-if="currentArtist?.description" class="artist-description">
+                <p :class="{ 'description-collapsed': !descriptionExpanded }">
+                  {{ currentArtist.description }}
+                </p>
+                <div v-if="currentArtist.description.length > 100" class="description-toggle" @click="descriptionExpanded = !descriptionExpanded">
+                  {{ descriptionExpanded ? '收起' : '展开' }}
+                  <IonIcon :icon="descriptionExpanded ? chevronUpOutline : chevronDownOutline" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -269,7 +275,9 @@ import {
   volumeHighOutline,
   musicalNotesOutline,
   albumsOutline,
-  peopleOutline
+  peopleOutline,
+  chevronUpOutline,
+  chevronDownOutline
 } from 'ionicons/icons'
 import { useArtistStore } from '@/stores/artist'
 import { useMusicStore } from '@/stores/music'
@@ -281,13 +289,14 @@ const artistStore = useArtistStore()
 const musicStore = useMusicStore()
 
 const selectedTab = ref('songs')
+const descriptionExpanded = ref(false)
 
 // 使用 storeToRefs 保持响应性
 const { currentArtist, artistSongs, artistAlbums, artistVideos, similarArtists, loading } = storeToRefs(artistStore)
 const currentSong = computed(() => musicStore.currentSong)
 
 onMounted(() => {
-  const artistId = parseInt(route.query.id as string)
+  const artistId = parseInt(route.params.id as string)
   if (artistId) {
     artistStore.loadArtist(artistId)
     // 根据当前标签页加载对应数据
@@ -403,7 +412,7 @@ const showSongMenu = async (song: any) => {
 
 const handleTabChange = (event: any) => {
   selectedTab.value = event.detail.value
-  const artistId = parseInt(route.query.id as string)
+  const artistId = parseInt(route.params.id as string)
 
   // 根据标签页加载对应数据
   if (artistId) {
@@ -586,12 +595,49 @@ const showToast = async (message: string) => {
 }
 
 .artist-description {
+  max-width: 320px;
+  text-align: center;
+}
+
+.artist-description p {
   font-size: 14px;
   line-height: 1.5;
   opacity: 0.9;
   margin: 0;
-  max-width: 320px;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.artist-description .description-collapsed {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.description-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
+  transition: all 0.2s ease;
+  align-self: center;
+}
+
+.description-toggle:hover {
+  background: rgba(0, 0, 0, 0.3);
+  color: white;
+}
+
+.description-toggle ion-icon {
+  font-size: 14px;
 }
 
 /* 英雄操作按钮 */
