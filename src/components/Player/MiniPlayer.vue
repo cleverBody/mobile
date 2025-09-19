@@ -1,5 +1,5 @@
 <template>
-  <div v-if="musicStore.isHasPlayer" class="mini-player" :class="{ 'with-tabs': isInTabsLayout }">
+  <div v-if="musicStore.isHasPlayer && !isInPlayerPage" class="mini-player" :class="{ 'with-tabs': isInTabsLayout }">
     <!-- 进度条 -->
     <div class="progress-container">
       <div
@@ -115,6 +115,11 @@ const progressPercent = computed(() => musicStore.progress)
 // 检测是否在tabs布局中（首页等）
 const isInTabsLayout = computed(() => {
   return router.currentRoute.value.path.startsWith('/tabs')
+})
+
+// 检测是否在播放器页面
+const isInPlayerPage = computed(() => {
+  return router.currentRoute.value.path === '/player'
 })
 
 // 播放模式相关

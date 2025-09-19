@@ -1,22 +1,17 @@
 <template>
   <IonPage>
-    <IonHeader class="player-header">
-      <IonToolbar>
-        <IonButtons slot="start">
-          <IonButton @click="closePlayer">
-            <IonIcon :icon="chevronDownOutline" />
-          </IonButton>
-        </IonButtons>
-        <IonTitle>正在播放</IonTitle>
-        <IonButtons slot="end">
-          <IonButton @click="showMore">
-            <IonIcon :icon="ellipsisHorizontalOutline" />
-          </IonButton>
-        </IonButtons>
-      </IonToolbar>
-    </IonHeader>
-
     <IonContent :fullscreen="true" class="player-content">
+      <!-- 全屏顶部控制栏 -->
+      <div class="fullscreen-header">
+        <IonButton fill="clear" @click="closePlayer" class="close-btn">
+          <IonIcon :icon="chevronDownOutline" />
+        </IonButton>
+        <div class="header-title">正在播放</div>
+        <IonButton fill="clear" @click="showMore" class="more-btn">
+          <IonIcon :icon="ellipsisHorizontalOutline" />
+        </IonButton>
+      </div>
+
       <div class="full-player">
         <!-- 背景模糊图 -->
         <div class="player-background">
@@ -28,11 +23,11 @@
           <div class="background-overlay"></div>
         </div>
 
-        <!-- 主要内容 -->
+        <!-- 主要内容 - 垂直居中布局 -->
         <div class="player-main">
-          <!-- 专辑封面 -->
-          <div class="album-cover-container">
-            <div class="album-cover" :class="{ spinning: isPlaying }">
+          <!-- 专辑封面区域 -->
+          <div class="album-section">
+            <div class="album-cover circular" :class="{ spinning: isPlaying }">
               <img
                 :src="currentSong?.cover || '/images/album.jpg'"
                 :alt="currentSong?.name"
@@ -41,39 +36,38 @@
             </div>
           </div>
 
-          <!-- 歌曲信息 -->
-          <div class="song-info">
+          <!-- 歌曲信息区域 -->
+          <div class="song-info-section">
             <h1 class="song-title">{{ currentSong?.name || '未知歌曲' }}</h1>
             <p class="artist-name">
               {{ currentSong?.artists?.map(a => a.name).join(', ') || '未知艺人' }}
             </p>
           </div>
 
-          <!-- 操作按钮 -->
-          <div class="action-buttons">
-            <IonButton
-              fill="clear"
-              size="large"
-              @click="toggleLike"
-              :color="isLiked ? 'primary' : 'medium'"
-            >
+          <!-- 功能按钮区域 - 进度条上方 -->
+          <div class="action-section">
+            <button class="action-btn" @click="toggleLike" :class="{ active: isLiked }">
               <IonIcon :icon="isLiked ? heart : heartOutline" />
-            </IonButton>
+            </button>
 
-            <IonButton fill="clear" size="large" @click="showComments">
+            <button class="action-btn" @click="showComments">
               <IonIcon :icon="chatbubbleOutline" />
-            </IonButton>
+            </button>
 
-            <IonButton fill="clear" size="large" @click="showPlaylist">
+            <button class="action-btn" @click="showPlaylist">
               <IonIcon :icon="listOutline" />
-            </IonButton>
+            </button>
 
-            <IonButton fill="clear" size="large" @click="shareSong">
+            <button class="action-btn" @click="shareSong">
               <IonIcon :icon="shareOutline" />
-            </IonButton>
+            </button>
+
+            <button class="action-btn" @click="showMore">
+              <IonIcon :icon="ellipsisHorizontalOutline" />
+            </button>
           </div>
 
-          <!-- 进度条 -->
+          <!-- 进度条区域 -->
           <div class="progress-section">
             <div class="progress-container">
               <IonRange
@@ -91,87 +85,30 @@
             </div>
           </div>
 
-          <!-- 播放控制 -->
+          <!-- 播放控制区域 - 进度条下方 -->
           <div class="player-controls">
-            <IonButton fill="clear" size="large" @click="togglePlayMode">
+            <button class="control-btn secondary" @click="togglePlayMode">
               <IonIcon :icon="getPlayModeIcon()" />
-            </IonButton>
+            </button>
 
-            <IonButton fill="clear" size="large" @click="prevSong" :disabled="!hasPrev">
+            <button class="control-btn secondary" @click="prevSong" :disabled="!hasPrev">
               <IonIcon :icon="playSkipBackOutline" />
-            </IonButton>
+            </button>
 
-            <IonButton
-              class="play-button"
-              fill="solid"
-              size="large"
-              @click="togglePlay"
-            >
+            <button class="control-btn primary play-button" @click="togglePlay">
               <IonIcon :icon="isPlaying ? pause : play" />
-            </IonButton>
+            </button>
 
-            <IonButton fill="clear" size="large" @click="nextSong" :disabled="!hasNext">
+            <button class="control-btn secondary" @click="nextSong" :disabled="!hasNext">
               <IonIcon :icon="playSkipForwardOutline" />
-            </IonButton>
+            </button>
 
-            <IonButton fill="clear" size="large" @click="toggleVolume">
+            <button class="control-btn secondary" @click="toggleVolume">
               <IonIcon :icon="getVolumeIcon()" />
-            </IonButton>
+            </button>
           </div>
         </div>
 
-        <!-- 底部标签页 -->
-        <div class="player-tabs">
-          <IonSegment v-model="activeTab" @ionChange="handleTabChange">
-            <IonSegmentButton value="player">
-              <IonLabel>播放器</IonLabel>
-            </IonSegmentButton>
-            <IonSegmentButton value="lyric">
-              <IonLabel>歌词</IonLabel>
-            </IonSegmentButton>
-            <IonSegmentButton value="playlist">
-              <IonLabel>列表</IonLabel>
-            </IonSegmentButton>
-          </IonSegment>
-        </div>
-
-        <!-- 标签页内容 -->
-        <div class="tab-content" v-show="activeTab === 'lyric'">
-          <div class="lyric-container">
-            <div class="lyric-line" v-for="(line, index) in lyrics" :key="index">
-              {{ line }}
-            </div>
-          </div>
-        </div>
-
-        <div class="tab-content" v-show="activeTab === 'playlist'">
-          <div class="playlist-container">
-            <div class="playlist-header">
-              <h3>播放列表 ({{ playlist.length }})</h3>
-              <IonButton fill="clear" size="small" @click="clearPlaylist">
-                清空列表
-              </IonButton>
-            </div>
-            <div class="playlist-list">
-              <div
-                v-for="(song, index) in playlist"
-                :key="song.id"
-                class="playlist-item"
-                :class="{ active: index === currentIndex }"
-                @click="playSongAtIndex(index)"
-              >
-                <div class="song-index">{{ index + 1 }}</div>
-                <div class="song-info">
-                  <h4 class="song-name">{{ song.name }}</h4>
-                  <p class="song-artist">{{ song.artists?.map(a => a.name).join(', ') }}</p>
-                </div>
-                <IonButton fill="clear" size="small" @click.stop="removeSongFromPlaylist(index)">
-                  <IonIcon :icon="closeOutline" />
-                </IonButton>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </IonContent>
   </IonPage>
@@ -351,28 +288,36 @@ const formatTime = (time: number) => {
 </script>
 
 <style scoped>
+/* === 全屏播放器基础样式 === */
 .full-player {
   position: relative;
   height: 100vh;
-  display: flex;
-  flex-direction: column;
-  color: white;
+  width: 100vw;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f0f9f4 0%, #e8f5ea 30%, #fafcfb 70%, #ffffff 100%);
 }
 
+.player-content {
+  --padding-top: 0 !important;
+  --padding-bottom: 0 !important;
+  --background: transparent;
+}
+
+/* === 背景处理 === */
 .player-background {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: -1;
+  z-index: 0;
 }
 
 .player-background img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(20px) brightness(0.3);
+  filter: blur(30px) brightness(0.2) saturate(0.8);
 }
 
 .background-overlay {
@@ -382,48 +327,89 @@ const formatTime = (time: number) => {
   right: 0;
   bottom: 0;
   background: linear-gradient(
-    to bottom,
-    rgba(168, 230, 207, 0.1) 0%,
-    rgba(45, 90, 61, 0.3) 50%,
-    rgba(26, 46, 35, 0.8) 100%
+    135deg,
+    rgba(168, 230, 207, 0.15) 0%,
+    rgba(136, 216, 163, 0.2) 30%,
+    rgba(248, 253, 249, 0.3) 70%,
+    rgba(255, 255, 255, 0.1) 100%
   );
+  backdrop-filter: blur(10px);
 }
 
-.player-header {
-  --background: transparent;
-  --color: white;
+/* === 顶部控制栏 === */
+.fullscreen-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.6), rgba(0,0,0,0));
+  z-index: 100;
+  padding-top: calc(var(--ion-safe-area-top) + 8px);
 }
 
-.player-header ion-toolbar {
-  --background: transparent;
-  --color: white;
+.close-btn, .more-btn {
+  --color: rgba(255, 255, 255, 0.9);
+  --background: rgba(255, 255, 255, 0.1);
+  --border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+.header-title {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* === 主要内容布局 === */
 .player-main {
-  flex: 1;
+  position: relative;
+  z-index: 10;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 20px;
   justify-content: center;
+  align-items: center;
+  padding: 80px 32px 40px;
+  gap: 18px;
 }
 
-.album-cover-container {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 32px;
+/* === 专辑封面区域 === */
+.album-section {
+  flex-shrink: 0;
 }
 
 .album-cover {
   width: 280px;
   height: 280px;
-  border-radius: 16px;
+  border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  transition: transform 0.3s ease;
+  position: relative;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 0 8px rgba(255, 255, 255, 0.05),
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .album-cover.spinning {
   animation: spin 20s linear infinite;
+}
+
+.album-cover:hover {
+  transform: scale(1.02);
+  box-shadow: 
+    0 25px 80px rgba(0, 0, 0, 0.5),
+    0 0 0 8px rgba(255, 255, 255, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
 }
 
 @keyframes spin {
@@ -437,219 +423,249 @@ const formatTime = (time: number) => {
   object-fit: cover;
 }
 
-.song-info {
+/* === 歌曲信息区域 === */
+.song-info-section {
   text-align: center;
-  margin-bottom: 24px;
+  max-width: 90%;
+  flex-shrink: 0;
+  margin: 8px 0;
 }
 
 .song-title {
-  font-size: 24px;
-  font-weight: bold;
-  margin: 0 0 8px 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--s-text-primary);
+  margin: 0 0 6px 0;
   line-height: 1.2;
+  letter-spacing: -0.5px;
 }
 
 .artist-name {
   font-size: 16px;
-  opacity: 0.8;
+  color: var(--s-text-secondary);
   margin: 0;
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
-.action-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 32px;
-  margin-bottom: 32px;
-}
-
-.action-buttons ion-button {
-  --color: white;
-  --background: transparent;
-}
-
+/* === 进度条区域 === */
 .progress-section {
-  margin-bottom: 32px;
+  width: 100%;
+  flex-shrink: 0;
+  padding: 0 0;
 }
 
 .progress-container {
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .progress-container ion-range {
-  --bar-background: rgba(255, 255, 255, 0.3);
-  --bar-background-active: white;
-  --knob-background: white;
-  --knob-size: 20px;
+  --bar-background: rgba(255, 255, 255, 0.2);
+  --bar-background-active: linear-gradient(90deg, var(--s-primary) 0%, var(--s-primary-accent) 100%);
+  --knob-background: var(--s-primary);
+  --knob-size: 16px;
+  --bar-height: 3px;
 }
 
 .time-display {
   display: flex;
   justify-content: space-between;
-  font-size: 14px;
-  opacity: 0.8;
+  font-size: 12px;
+  color: var(--s-text-tertiary);
+  font-weight: 400;
+  letter-spacing: 0.3px;
 }
 
+/* === 播放控制区域 === */
 .player-controls {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 24px;
+  flex-shrink: 0;
+  margin-top: 12px;
 }
 
-.player-controls ion-button {
-  --color: white;
-  --background: transparent;
-}
-
-.play-button {
-  --background: var(--s-primary);
-  --color: white;
-  --border-radius: 50%;
-  width: 64px;
-  height: 64px;
-  box-shadow: 0 4px 16px rgba(168, 230, 207, 0.3);
-}
-
-.player-tabs {
-  background: rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(10px);
-}
-
-.player-tabs ion-segment {
-  --background: transparent;
-}
-
-.player-tabs ion-segment-button {
-  --color: rgba(255, 255, 255, 0.6);
-  --color-checked: white;
-  --indicator-color: white;
-}
-
-.tab-content {
-  flex: 1;
-  overflow: hidden;
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(10px);
-}
-
-.lyric-container {
-  padding: 20px;
-  text-align: center;
-  overflow-y: auto;
-  height: 100%;
-}
-
-.lyric-line {
-  font-size: 18px;
-  line-height: 2;
-  margin: 16px 0;
-  opacity: 0.6;
-  transition: opacity 0.3s ease;
-}
-
-.lyric-line.active {
-  opacity: 1;
-  font-weight: bold;
-}
-
-.playlist-container {
-  padding: 20px;
-  height: 100%;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.playlist-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.playlist-header h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.playlist-header ion-button {
-  --color: white;
-}
-
-.playlist-list {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.playlist-item {
-  display: flex;
-  align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.control-btn {
+  border: none;
+  background: none;
   cursor: pointer;
-  transition: background 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  outline: none;
+  position: relative;
+  color: rgba(255, 255, 255, 0.8);
 }
 
-.playlist-item:hover {
-  background: rgba(255, 255, 255, 0.1);
+.control-btn.secondary {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 20px;
 }
 
-.playlist-item.active {
-  background: rgba(255, 255, 255, 0.2);
+.control-btn.secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  transform: scale(1.05);
 }
 
-.song-index {
-  width: 32px;
-  text-align: center;
-  font-size: 14px;
-  opacity: 0.6;
+.control-btn.secondary:active:not(:disabled) {
+  transform: scale(0.95);
 }
 
-.playlist-item .song-info {
-  flex: 1;
-  text-align: left;
-  margin: 0;
+.control-btn.secondary:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
-.playlist-item .song-name {
-  font-size: 14px;
-  font-weight: 500;
-  margin: 0 0 4px 0;
+.control-btn.primary {
+  width: 68px;
+  height: 68px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 28px;
+  box-shadow: 
+    0 6px 24px rgba(102, 126, 234, 0.4),
+    0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
-.playlist-item .song-artist {
-  font-size: 12px;
-  opacity: 0.6;
-  margin: 0;
+.control-btn.primary:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    0 8px 32px rgba(102, 126, 234, 0.6),
+    0 0 0 3px rgba(255, 255, 255, 0.15);
 }
 
-.playlist-item ion-button {
-  --color: rgba(255, 255, 255, 0.6);
+.control-btn.primary:active {
+  transform: scale(0.98);
 }
 
+/* === 功能按钮区域 === */
+.action-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  flex-shrink: 0;
+  margin: 20px 0;
+  padding: 0;
+}
+
+.action-btn {
+  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  outline: none;
+  font-size: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.9);
+  transform: scale(1.05);
+}
+
+.action-btn.active {
+  background: rgba(168, 230, 207, 0.2);
+  color: var(--s-primary);
+  border-color: rgba(168, 230, 207, 0.3);
+}
+
+/* === 响应式设计 === */
 @media (max-width: 480px) {
+  .player-main {
+    padding: 70px 24px 30px;
+    gap: 16px;
+  }
+
   .album-cover {
     width: 240px;
     height: 240px;
   }
 
   .song-title {
-    font-size: 20px;
+    font-size: 22px;
   }
 
-  .action-buttons {
-    gap: 24px;
+  .artist-name {
+    font-size: 15px;
+  }
+
+  .song-info-section {
+    margin: 6px 0;
+  }
+
+  .action-section {
+    margin: 16px 0;
+    padding: 0;
   }
 
   .player-controls {
+    gap: 20px;
+    margin-top: 10px;
+  }
+
+  .control-btn.secondary {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+
+  .control-btn.primary {
+    width: 60px;
+    height: 60px;
+    font-size: 24px;
+  }
+
+  .action-btn {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+
+  .fullscreen-header {
+    padding: 0 20px;
+  }
+
+  .close-btn, .more-btn {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-height: 700px) {
+  .player-main {
     gap: 16px;
   }
 
-  .play-button {
-    width: 56px;
-    height: 56px;
+  .album-cover {
+    width: 200px;
+    height: 200px;
+  }
+
+  .song-title {
+    font-size: 22px;
+  }
+
+  .control-btn.primary {
+    width: 70px;
+    height: 70px;
   }
 }
 </style>

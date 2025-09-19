@@ -97,42 +97,42 @@ export const useMusicStore = defineStore('music', () => {
   const loadAndPlaySong = async (song: Song) => {
     try {
       console.log('🎵 开始加载歌曲:', song.name)
-      alert(`开始加载歌曲: ${song.name}`)
+      // alert(`开始加载歌曲: ${song.name}`)
 
-      alert('步骤1: 准备停止当前播放')
+      // alert('步骤1: 准备停止当前播放')
       // 停止当前播放
       if (howl) {
-        alert('步骤2: 发现现有howl实例，正在停止')
+        // alert('步骤2: 发现现有howl实例，正在停止')
         howl.stop()
         howl.unload()
-        alert('步骤3: howl实例已停止和卸载')
+        // alert('步骤3: howl实例已停止和卸载')
       } else {
-        alert('步骤2: 没有现有howl实例')
+        // alert('步骤2: 没有现有howl实例')
       }
 
-      alert('步骤4: 开始检测移动端环境')
+      // alert('步骤4: 开始检测移动端环境')
       // 检测移动端环境
       const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                       window.location.protocol === 'capacitor:' ||
                       (typeof window !== 'undefined' && (window as any).Capacitor)
 
-      alert(`步骤5: 移动端检测完成，结果: ${isMobile}`)
+      // alert(`步骤5: 移动端检测完成，结果: ${isMobile}`)
       console.log('🎵 移动端检测:', isMobile, 'protocol:', window.location.protocol)
 
-      alert("步骤6: 跳过移动端音频权限处理，直接获取歌曲URL")
+      // alert("步骤6: 跳过移动端音频权限处理，直接获取歌曲URL")
       // 获取歌曲播放URL
       console.log('🎵 获取歌曲播放URL...')
-      alert(`开始获取歌曲URL，歌曲ID: ${song.id}`)
+      // alert(`开始获取歌曲URL，歌曲ID: ${song.id}`)
 
       const urlResponse = await musicApi.getSongUrl(song.id)
-      alert(`API响应: ${JSON.stringify(urlResponse)}`)
+      // alert(`API响应: ${JSON.stringify(urlResponse)}`)
 
       const songUrl = urlResponse.data?.[0]?.url
-      alert(`解析出的URL: ${songUrl}`)
+      // alert(`解析出的URL: ${songUrl}`)
 
       if (!songUrl) {
         console.error('❌ 无法获取歌曲播放链接')
-        alert(`❌ 无法获取歌曲播放链接: ${song.name}`)
+        // alert(`❌ 无法获取歌曲播放链接: ${song.name}`)
         return
       }
 
@@ -172,16 +172,16 @@ export const useMusicStore = defineStore('music', () => {
       try {
         howl.play()
         console.log('✅ 播放命令已发送')
-        alert(`✅ 播放命令已发送: ${song.name}`)
+        // alert(`✅ 播放命令已发送: ${song.name}`)
       } catch (playError) {
         console.error('❌ 播放失败:', playError)
-        alert(`❌ 播放失败: ${playError}`)
+        // alert(`❌ 播放失败: ${playError}`)
       }
 
 
     } catch (error) {
       console.error('加载歌曲失败:', error)
-      alert(`❌ 加载歌曲失败: ${error}`)
+      // alert(`❌ 加载歌曲失败: ${error}`)
     }
   }
 
