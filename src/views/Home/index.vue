@@ -243,7 +243,7 @@ const goToPlaylist = (id: number) => {
 }
 
 const goToArtist = (id: number) => {
-  router.push({ name: 'Artist', query: { id: id.toString() } })
+  router.push({ name: 'Artist', params: { id: id.toString() } })
 }
 
 const goToAlbum = (id: number) => {
