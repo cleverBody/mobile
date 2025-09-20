@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { apiRequest } from '@/utils/api'
+import { musicApi } from '@/api/music'
 
 export interface SearchResults {
   songs: Array<{
@@ -49,12 +49,11 @@ export const useSearchStore = defineStore('search', () => {
   // 方法
   const loadSuggestions = async () => {
     try {
-      const response = await apiRequest('/search/hot/detail?realIP=116.25.146.177')
-      const data = await response.json()
-
-      // 处理桌面应用相同的响应格式
-      if (data.code === 200 && data.data) {
-        suggestions.value = data.data.map((item: any) => item.searchWord || item.first).slice(0, 12)
+      const data = await musicApi.getHotSearch()
+      
+      // 处理热搜API响应
+      if (data.data && Array.isArray(data.data)) {
+        suggestions.value = data.data.map((item: any) => item.searchWord).slice(0, 12)
       } else {
         // 备用热搜词
         suggestions.value = [
@@ -79,57 +78,56 @@ export const useSearchStore = defineStore('search', () => {
 
     loading.value = true
     try {
-      // 调用搜索建议接口 - 与桌面应用保持一致
-      const response = await apiRequest(`/search/suggest?keywords=${encodeURIComponent(query)}&realIP=116.25.146.177`)
-      const data = await response.json()
+      // 调用搜索建议接口
+      const data = await musicApi.getSearchSuggest(query)
 
       // 按照实际API响应结构处理数据
-      if (data.success && data.data && data.data.code === 200 && data.data.result) {
-        const result = data.data.result
+      if (data.result) {
+        const result = data.result
 
-        // 处理歌曲结果 - 根据实际API返回结构
+        // 处理歌曲结果
         const songs = (result.songs || []).map((song: any) => ({
           id: song.id,
           name: song.name,
           artists: song.artists || [],
           album: song.album,
-          cover: song.album?.picUrl || (song.album?.picId ? `https://p4.music.126.net/${song.album.picId}/${song.album.picId}.jpg?param=300y300` : ''),
+          cover: song.album?.picUrl || '',
           duration: Math.floor((song.duration || 0) / 1000)
         }))
 
-      // 处理歌手结果
-      const artists = (result.artists || []).map((artist: any) => ({
-        id: artist.id,
-        name: artist.name,
-        cover: artist.picUrl || artist.img1v1Url || '',
-        followers: artist.fansCount || 0
-      }))
+        // 处理歌手结果
+        const artists = (result.artists || []).map((artist: any) => ({
+          id: artist.id,
+          name: artist.name,
+          cover: artist.picUrl || artist.img1v1Url || '',
+          followers: artist.fansCount || 0
+        }))
 
-      // 处理专辑结果
-      const albums = (result.albums || []).map((album: any) => ({
-        id: album.id,
-        name: album.name,
-        cover: album.picUrl || '',
-        artist: album.artist?.name || '',
-        releaseDate: album.publishTime ? new Date(album.publishTime).toLocaleDateString() : ''
-      }))
+        // 处理专辑结果
+        const albums = (result.albums || []).map((album: any) => ({
+          id: album.id,
+          name: album.name,
+          cover: album.picUrl || '',
+          artist: album.artist?.name || '',
+          releaseDate: album.publishTime ? new Date(album.publishTime).toLocaleDateString() : ''
+        }))
 
-      // 处理歌单结果
-      const playlists = (result.playlists || []).map((playlist: any) => ({
-        id: playlist.id,
-        name: playlist.name,
-        cover: playlist.coverImgUrl || '',
-        description: playlist.description || '',
-        trackCount: playlist.trackCount || 0,
-        creator: playlist.creator?.nickname || ''
-      }))
+        // 处理歌单结果
+        const playlists = (result.playlists || []).map((playlist: any) => ({
+          id: playlist.id,
+          name: playlist.name,
+          cover: playlist.coverImgUrl || '',
+          description: playlist.description || '',
+          trackCount: playlist.trackCount || 0,
+          creator: playlist.creator?.nickname || ''
+        }))
 
-      results.value = {
-        songs,
-        artists,
-        albums,
-        playlists
-      }
+        results.value = {
+          songs,
+          artists,
+          albums,
+          playlists
+        }
       } else {
         clearResults()
       }

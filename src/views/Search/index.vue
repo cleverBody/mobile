@@ -1,27 +1,47 @@
 <template>
   <IonPage>
-    <IonHeader>
-      <IonToolbar>
-        <IonButtons slot="start">
-          <IonButton @click="goBack">
-            <IonIcon :icon="arrowBackOutline" />
-          </IonButton>
-        </IonButtons>
-        <IonSearchbar
-          v-model="searchQuery"
-          placeholder="搜索歌曲、歌手、专辑"
-          :debounce="300"
-          @ionInput="handleSearch"
-          @ionClear="clearSearch"
-          show-clear-button="focus"
-        />
-      </IonToolbar>
-    </IonHeader>
-    
     <IonContent :fullscreen="true">
       <div class="search-page">
-        <!-- 搜索建议 -->
-        <div v-if="!searchQuery && searchSuggestions.length > 0" class="search-suggestions">
+        <!-- 自定义搜索头部 -->
+        <div class="search-header">
+          <div class="search-bar-container">
+            <IonButton
+              fill="clear"
+              class="back-button"
+              @click="goBack"
+            >
+              <IonIcon :icon="arrowBackOutline" />
+            </IonButton>
+            
+            <div class="search-bar" :class="{ 'search-bar-focused': isSearchFocused }">
+              <IonIcon :icon="searchOutline" class="search-icon" />
+              <input
+                ref="searchInput"
+                v-model="searchQuery"
+                type="text"
+                placeholder="搜索歌曲、歌手、专辑"
+                class="search-input"
+                @input="handleSearch"
+                @focus="isSearchFocused = true"
+                @blur="isSearchFocused = false"
+              />
+              <IonButton
+                v-if="searchQuery"
+                fill="clear"
+                size="small"
+                class="clear-button"
+                @click="clearSearch"
+              >
+                <IonIcon :icon="closeOutline" />
+              </IonButton>
+            </div>
+          </div>
+        </div>
+
+        <!-- 内容区域 -->
+        <div class="search-content">
+          <!-- 搜索建议 -->
+          <div v-if="!searchQuery && searchSuggestions.length > 0" class="search-suggestions">
           <h3 class="suggestions-title">热门搜索</h3>
           <div class="suggestions-grid">
             <IonChip 
@@ -211,6 +231,7 @@
             </div>
           </div>
         </div>
+        </div>
       </div>
     </IonContent>
   </IonPage>
@@ -220,13 +241,9 @@
 import { ref, computed, onMounted } from 'vue'
 import {
   IonPage,
-  IonHeader,
-  IonToolbar,
-  IonButtons,
+  IonContent,
   IonButton,
   IonIcon,
-  IonSearchbar,
-  IonContent,
   IonChip,
   IonLabel,
   IonSpinner,
@@ -257,6 +274,9 @@ const musicStore = useMusicStore()
 const searchQuery = ref('')
 const activeTab = ref('songs')
 const searching = ref(false)
+const isSearchFocused = ref(false)
+const searchInput = ref<HTMLInputElement>()
+let searchTimeout: NodeJS.Timeout | null = null
 
 // 计算属性
 const searchSuggestions = computed(() => searchStore.suggestions)
@@ -275,22 +295,30 @@ const goBack = () => {
   router.back()
 }
 
-const handleSearch = async (event: CustomEvent) => {
-  const query = event.detail.value.trim()
-  if (!query) {
-    searchStore.clearResults()
-    return
+const handleSearch = async () => {
+  // 清除之前的定时器
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
   }
   
-  searching.value = true
-  try {
-    await searchStore.search(query)
-    searchStore.addToHistory(query)
-  } catch (error) {
-    console.error('搜索失败:', error)
-  } finally {
-    searching.value = false
-  }
+  // 设置防抖
+  searchTimeout = setTimeout(async () => {
+    const query = searchQuery.value.trim()
+    if (!query) {
+      searchStore.clearResults()
+      return
+    }
+    
+    searching.value = true
+    try {
+      await searchStore.search(query)
+      searchStore.addToHistory(query)
+    } catch (error) {
+      console.error('搜索失败:', error)
+    } finally {
+      searching.value = false
+    }
+  }, 300)
 }
 
 const clearSearch = () => {
@@ -300,7 +328,7 @@ const clearSearch = () => {
 
 const searchKeyword = (keyword: string) => {
   searchQuery.value = keyword
-  handleSearch({ detail: { value: keyword } } as CustomEvent)
+  handleSearch()
 }
 
 const clearHistory = () => {
@@ -366,8 +394,91 @@ onMounted(() => {
 
 <style scoped>
 .search-page {
-  padding: 16px;
+  --padding-top: 0;
+  padding: 0;
   padding-bottom: 120px;
+}
+
+/* 搜索头部样式 */
+.search-header {
+  position: sticky;
+  top: 0;
+  background: var(--ion-background-color);
+  z-index: 10;
+  padding: var(--ion-safe-area-top) 16px 16px;
+  box-shadow: 0 2px 8px var(--s-shadow-light);
+}
+
+.search-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.back-button {
+  --background: var(--s-surface);
+  --border-radius: 50%;
+  --color: var(--s-text-primary);
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px var(--s-shadow-light);
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  padding: 14px 20px;
+  background: var(--s-surface);
+  border-radius: 28px;
+  border: 1px solid var(--s-border-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 12px var(--s-shadow-light);
+}
+
+.search-bar-focused {
+  border-color: var(--s-primary);
+  box-shadow: 0 4px 20px var(--s-shadow);
+  transform: translateY(-1px);
+}
+
+.search-icon {
+  color: var(--s-text-tertiary);
+  margin-right: 14px;
+  font-size: 20px;
+  transition: color 0.3s ease;
+  flex-shrink: 0;
+}
+
+.search-bar-focused .search-icon {
+  color: var(--s-primary);
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--s-text-primary);
+  letter-spacing: 0.2px;
+}
+
+.search-input::placeholder {
+  color: var(--s-text-secondary);
+}
+
+.clear-button {
+  --color: var(--s-text-tertiary);
+  margin-left: 8px;
+  flex-shrink: 0;
+}
+
+/* 内容区域 */
+.search-content {
+  padding: 16px;
 }
 
 .search-suggestions,

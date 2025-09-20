@@ -41,10 +41,30 @@ export const usePlayerStore = defineStore('player', () => {
       const response = await musicApi.getSongUrl(songId)
       if (response.data && response.data.length > 0) {
         const songData = response.data.find(item => item.id === songId)
+        alert(songData)
         if (songData?.url) {
           return songData.url
         } else {
           console.warn('歌曲播放链接为空，可能因为版权限制:', songData)
+
+          // 尝试不同音质等级的降级策略
+          const fallbackLevels = ['standard', 'higher', 'lossless']
+          for (const level of fallbackLevels) {
+            try {
+              console.log(`尝试降级音质 ${level} 获取播放链接...`)
+              const fallbackResponse = await musicApi.getSongUrl(songId, level)
+              if (fallbackResponse.data && fallbackResponse.data.length > 0) {
+                const fallbackSongData = fallbackResponse.data.find(item => item.id === songId)
+                if (fallbackSongData?.url) {
+                  console.log(`降级音质 ${level} 成功获取播放链接`)
+                  return fallbackSongData.url
+                }
+              }
+            } catch (fallbackErr) {
+              console.warn(`降级音质 ${level} 失败:`, fallbackErr)
+            }
+          }
+
           return null
         }
       }
@@ -296,12 +316,30 @@ export const usePlayerStore = defineStore('player', () => {
               play()
             }
           } else {
-            error.value = '无法获取歌曲播放链接'
-            console.error('歌曲播放链接为空:', newSong.id)
+            error.value = '该歌曲暂无音源'
+            console.error('歌曲播放链接为空:', newSong.id, newSong.name)
+
+            // 自动跳到下一首（如果有的话）
+            if (musicStore.hasNext) {
+              console.log('自动跳到下一首歌曲')
+              setTimeout(() => {
+                nextSong()
+              }, 1000) // 延迟1秒后跳转，让用户看到错误提示
+            } else {
+              console.log('已是最后一首歌曲')
+            }
           }
         } catch (err) {
           console.error('获取歌曲播放链接失败:', err)
           error.value = '获取播放链接失败'
+
+          // 自动跳到下一首（如果有的话）
+          if (musicStore.hasNext) {
+            console.log('播放失败，自动跳到下一首歌曲')
+            setTimeout(() => {
+              nextSong()
+            }, 1000)
+          }
         }
       }
     },

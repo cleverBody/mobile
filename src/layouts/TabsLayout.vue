@@ -66,14 +66,14 @@ import {
 .content-area {
   flex: 1;
   overflow: hidden;
-  padding-bottom: calc(130px + var(--ion-safe-area-bottom));
+  padding-bottom: calc(140px + var(--ion-safe-area-bottom));
 }
 
 .tab-bar {
   --background: var(--s-surface);
   --border: 1px solid var(--s-border-light);
   --color-selected: var(--s-primary);
-  height: calc(60px + var(--ion-safe-area-bottom));
+  height: calc(70px + var(--ion-safe-area-bottom));
   padding-bottom: var(--ion-safe-area-bottom);
   backdrop-filter: blur(20px);
   box-shadow: 0 -2px 20px var(--s-shadow-light);
@@ -83,8 +83,13 @@ import {
 .tab-button {
   --color: var(--s-text-tertiary);
   --color-selected: var(--s-primary);
-  --padding-top: 8px;
-  --padding-bottom: 8px;
+  --padding-top: 10px;
+  --padding-bottom: 10px;
+  min-height: 60px;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -94,7 +99,8 @@ import {
 
 .tab-icon {
   font-size: 22px;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
+  flex-shrink: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -104,15 +110,43 @@ import {
 }
 
 .tab-label {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.5px;
-  margin-top: 2px;
+  margin-top: 0;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  flex-shrink: 0;
+  max-width: 100%;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .tab-button.tab-selected .tab-label {
   color: var(--s-primary);
   font-weight: 600;
+}
+
+/* 确保文字不被截断的额外样式 */
+ion-tab-button {
+  overflow: visible !important;
+}
+
+ion-label {
+  overflow: visible !important;
+  white-space: nowrap !important;
+  text-overflow: unset !important;
+}
+
+/* 调整小屏幕显示 */
+@media (max-width: 375px) {
+  .tab-label {
+    font-size: 11px;
+  }
+  
+  .tab-icon {
+    font-size: 20px;
+  }
 }
 </style>
