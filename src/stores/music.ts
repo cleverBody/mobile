@@ -124,15 +124,51 @@ export const useMusicStore = defineStore('music', () => {
       console.log('🎵 获取歌曲播放URL...')
       // alert(`开始获取歌曲URL，歌曲ID: ${song.id}`)
 
+      let songUrl = null
+      
+      // 首先尝试默认音质
       const urlResponse = await musicApi.getSongUrl(song.id)
       // alert(`API响应: ${JSON.stringify(urlResponse)}`)
-
-      const songUrl = urlResponse.data?.[0]?.url
-      // alert(`解析出的URL: ${songUrl}`)
+      
+      songUrl = urlResponse.data?.[0]?.url || null
+      
+      // 如果默认音质失败，尝试降级策略
+      if (!songUrl) {
+        console.warn('歌曲播放链接为空，尝试降级音质获取...')
+        const fallbackLevels = ['standard', 'higher', 'lossless']
+        
+        for (const level of fallbackLevels) {
+          try {
+            console.log(`尝试降级音质 ${level} 获取播放链接...`)
+            const fallbackResponse = await musicApi.getSongUrl(song.id, level)
+            if (fallbackResponse.data && fallbackResponse.data.length > 0) {
+              const fallbackSongData = fallbackResponse.data.find(item => item.id === song.id)
+              if (fallbackSongData?.url) {
+                songUrl = fallbackSongData.url
+                console.log(`降级音质 ${level} 成功获取播放链接`)
+                break
+              }
+            }
+          } catch (fallbackErr) {
+            console.warn(`降级音质 ${level} 失败:`, fallbackErr)
+          }
+        }
+      }
 
       if (!songUrl) {
         console.error('❌ 无法获取歌曲播放链接')
         // alert(`❌ 无法获取歌曲播放链接: ${song.name}`)
+        
+        // 自动跳到下一首
+        if (hasNext.value) {
+          console.log('自动跳到下一首歌曲')
+          showToast('该歌曲暂无音源，跳至下一首', 'warning')
+          setTimeout(() => {
+            nextSong()
+          }, 1000)
+        } else {
+          showToast('该歌曲暂无音源', 'warning')
+        }
         return
       }
 

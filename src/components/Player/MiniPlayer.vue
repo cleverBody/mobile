@@ -149,22 +149,22 @@ const playModeText = computed(() => {
 
 // 方法
 const togglePlay = () => {
-  alert('MiniPlayer togglePlay 被调用')
+  // alert('MiniPlayer togglePlay 被调用')
 
-  alert(`currentSong.value: ${JSON.stringify(currentSong.value)}`)
+  // alert(`currentSong.value: ${JSON.stringify(currentSong.value)}`)
 
   if (!currentSong.value) {
-    alert('没有currentSong，调用setTestSong')
+    // alert('没有currentSong，调用setTestSong')
     musicStore.setTestSong()
     return
   }
 
-  alert('准备调用 musicStore.togglePlay()')
+  // alert('准备调用 musicStore.togglePlay()')
   try {
     musicStore.togglePlay()
-    alert('musicStore.togglePlay() 调用完成')
+    // alert('musicStore.togglePlay() 调用完成')
   } catch (error) {
-    alert(`musicStore.togglePlay() 出错: ${error.message}`)
+    // alert(`musicStore.togglePlay() 出错: ${error.message}`)
   }
 }
 

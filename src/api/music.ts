@@ -173,8 +173,8 @@ export const musicApi = {
   },
 
   // 获取热搜榜
-  getHotSearch(): Promise<{ data: Array<{ searchWord: string, score: number }> }> {
-    return api.get('/search_hot')
+  getHotSearch(): Promise<{ data: Array<{ searchWord: string, score: number, content: string, iconUrl?: string, iconType?: number }> }> {
+    return api.get('/search_hot_detail')
   },
 
   // 获取搜索建议
