@@ -227,15 +227,15 @@ const goToPodcast = () => {
 }
 
 const goToDiscover = () => {
-  router.push('/tabs/discover')
+  router.push('/discover/playlist-square')
 }
 
 const goToArtists = () => {
-  router.push('/tabs/discover')
+  router.push('/discover/artists')
 }
 
 const goToNewAlbums = () => {
-  router.push('/tabs/discover')
+  router.push('/discover/new-music')
 }
 
 const goToPlaylist = (id: number) => {
