@@ -10,14 +10,7 @@
 
           <!-- 顶部操作栏 -->
           <div class="top-bar">
-            <IonButton
-              fill="clear"
-              color="light"
-              @click="goBack"
-              class="back-button"
-            >
-              <IonIcon :icon="arrowBackOutline" />
-            </IonButton>
+            <BackButton color="light" />
 
             <div class="top-actions">
               <IonButton fill="clear" color="light" @click="shareArtist">
@@ -302,11 +295,16 @@ import {
 import { useArtistStore } from '@/stores/artist'
 import { useMusicStore } from '@/stores/music'
 import { formatNumber, formatDuration } from '@/utils/format'
+import { useSwipeBack } from '@/composables/useSwipeBack'
+import BackButton from '@/components/common/BackButton.vue'
 
 const route = useRoute()
 const router = useRouter()
 const artistStore = useArtistStore()
 const musicStore = useMusicStore()
+
+// 启用侧滑返回
+const { goBack } = useSwipeBack()
 
 const selectedTab = ref('songs')
 const descriptionExpanded = ref(false)
@@ -332,10 +330,6 @@ onMounted(() => {
 
 const formatPlayCount = (count?: number) => {
   return formatNumber(count)
-}
-
-const goBack = () => {
-  router.back()
 }
 
 const shareArtist = () => {

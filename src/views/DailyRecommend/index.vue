@@ -10,14 +10,7 @@
           
           <!-- 顶部操作栏 -->
           <div class="top-bar">
-            <IonButton 
-              fill="clear" 
-              color="light"
-              @click="goBack"
-              class="back-button"
-            >
-              <IonIcon :icon="arrowBackOutline" />
-            </IonButton>
+            <BackButton color="light" />
             
             <div class="top-actions">
               <IonButton fill="clear" color="light" @click="refresh">
@@ -142,7 +135,6 @@ import {
   toastController
 } from '@ionic/vue'
 import {
-  arrowBackOutline,
   refreshOutline,
   ellipsisVerticalOutline,
   calendarOutline,
@@ -154,9 +146,14 @@ import {
 } from 'ionicons/icons'
 import { useMusicStore } from '@/stores/music'
 import { musicApi, formatSong } from '@/api/music'
+import { useSwipeBack } from '@/composables/useSwipeBack'
+import BackButton from '@/components/common/BackButton.vue'
 
 const router = useRouter()
 const musicStore = useMusicStore()
+
+// 启用侧滑返回
+const { goBack } = useSwipeBack()
 
 const dailySongs = ref<any[]>([])
 const loading = ref(false)
@@ -187,10 +184,6 @@ const loadDailyRecommend = async () => {
   } finally {
     loading.value = false
   }
-}
-
-const goBack = () => {
-  router.back()
 }
 
 const refresh = () => {
