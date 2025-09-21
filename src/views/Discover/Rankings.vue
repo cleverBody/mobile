@@ -1,71 +1,71 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/discover"></ion-back-button>
-        </ion-buttons>
-        <ion-title>排行榜</ion-title>
-      </ion-toolbar>
-    </ion-header>
+    <ion-content :fullscreen="true" class="rankings-content">
+      <div class="rankings-page">
+        <!-- 顶部操作栏 -->
+        <div class="top-bar">
+          <BackButton />
+          <h1 class="page-title">排行榜</h1>
+          <div class="spacer"></div>
+        </div>
 
-    <ion-content class="rankings-content">
-      <!-- 官方榜 -->
-      <div class="section">
-        <h2 class="section-title">官方榜</h2>
-        <div class="official-rankings">
-          <div
-            v-for="ranking in officialRankings"
-            :key="ranking.id"
-            class="ranking-card official"
-            @click="goToRanking(ranking.id)"
-          >
-            <div class="ranking-cover">
-              <img :src="ranking.cover" :alt="ranking.name" />
-            </div>
-            <div class="ranking-info">
-              <h3 class="ranking-name">{{ ranking.name }}</h3>
-              <p class="update-frequency">{{ ranking.updateFrequency }}</p>
-              <div class="top-songs">
-                <div
-                  v-for="(song, index) in ranking.topSongs"
-                  :key="song.id"
-                  class="top-song"
-                >
-                  <span class="song-index">{{ index + 1 }}</span>
-                  <span class="song-info">{{ song.name }} - {{ song.artist }}</span>
+        <!-- 官方榜 -->
+        <div class="section">
+          <h2 class="section-title">官方榜</h2>
+          <div class="official-rankings">
+            <div
+              v-for="ranking in officialRankings"
+              :key="ranking.id"
+              class="ranking-card official"
+              @click="goToRanking(ranking.id)"
+            >
+              <div class="ranking-cover">
+                <img :src="ranking.cover" :alt="ranking.name" />
+              </div>
+              <div class="ranking-info">
+                <h3 class="ranking-name">{{ ranking.name }}</h3>
+                <p class="update-frequency">{{ ranking.updateFrequency }}</p>
+                <div class="top-songs">
+                  <div
+                    v-for="(song, index) in ranking.topSongs"
+                    :key="song.id"
+                    class="top-song"
+                  >
+                    <span class="song-index">{{ index + 1 }}</span>
+                    <span class="song-info">{{ song.name }} - {{ song.artist }}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 全球榜 -->
-      <div class="section">
-        <h2 class="section-title">全球榜</h2>
-        <div class="global-rankings">
-          <div
-            v-for="ranking in globalRankings"
-            :key="ranking.id"
-            class="ranking-card global"
-            @click="goToRanking(ranking.id)"
-          >
-            <div class="ranking-cover">
-              <img :src="ranking.cover" :alt="ranking.name" />
-            </div>
-            <div class="ranking-info">
-              <h3 class="ranking-name">{{ ranking.name }}</h3>
-              <p class="update-frequency">{{ ranking.updateFrequency }}</p>
+        <!-- 全球榜 -->
+        <div class="section">
+          <h2 class="section-title">全球榜</h2>
+          <div class="global-rankings">
+            <div
+              v-for="ranking in globalRankings"
+              :key="ranking.id"
+              class="ranking-card global"
+              @click="goToRanking(ranking.id)"
+            >
+              <div class="ranking-cover">
+                <img :src="ranking.cover" :alt="ranking.name" />
+              </div>
+              <div class="ranking-info">
+                <h3 class="ranking-name">{{ ranking.name }}</h3>
+                <p class="update-frequency">{{ ranking.updateFrequency }}</p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 加载状态 -->
-      <div v-if="loading" class="loading-state">
-        <ion-spinner name="bubbles"></ion-spinner>
-        <p>加载中...</p>
+        <!-- 加载状态 -->
+        <div v-if="loading" class="loading-state">
+          <ion-spinner name="bubbles"></ion-spinner>
+          <p>加载中...</p>
+        </div>
       </div>
     </ion-content>
   </ion-page>
@@ -75,10 +75,11 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonButtons, IonBackButton, IonSpinner
+  IonPage, IonContent, IonSpinner
 } from '@ionic/vue'
 import { toplistApi } from '@/api/discover'
+import { useSwipeBack } from '@/composables/useSwipeBack'
+import BackButton from '@/components/common/BackButton.vue'
 
 interface RankingItem {
   id: number
@@ -94,6 +95,10 @@ interface RankingItem {
 }
 
 const router = useRouter()
+
+// 启用侧滑返回
+const { goBack } = useSwipeBack()
+
 const loading = ref(false)
 const rankings = ref<RankingItem[]>([])
 
@@ -150,6 +155,34 @@ const goToRanking = (id: number) => {
 <style scoped>
 .rankings-content {
   --background: var(--ion-color-light);
+}
+
+.rankings-page {
+  padding-bottom: 120px;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.spacer {
+  min-width: 44px;
 }
 
 .section {
