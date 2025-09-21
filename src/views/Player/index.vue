@@ -3,13 +3,13 @@
     <IonContent :fullscreen="true" class="player-content">
       <!-- 全屏顶部控制栏 -->
       <div class="fullscreen-header">
-        <IonButton fill="clear" @click="closePlayer" class="close-btn">
+        <button @click="closePlayer" class="close-btn">
           <IonIcon :icon="chevronDownOutline" />
-        </IonButton>
+        </button>
         <div class="header-title">正在播放</div>
-        <IonButton fill="clear" @click="showMore" class="more-btn">
+        <button @click="showMore" class="more-btn">
           <IonIcon :icon="ellipsisHorizontalOutline" />
-        </IonButton>
+        </button>
       </div>
 
       <div class="full-player">
@@ -207,18 +207,13 @@ const shareSong = () => {
 }
 
 const handleSeek = (event: CustomEvent) => {
-  if (!seeking.value) return
   const percent = event.detail.value
-  const time = (percent / 100) * playerStore.duration
-  playerStore.seek(time)
+  const time = (percent / 100) * musicStore.duration
+  musicStore.seekTo(time)
 }
 
 const togglePlay = () => {
-  if (isPlaying.value) {
-    playerStore.pause()
-  } else {
-    playerStore.play()
-  }
+  musicStore.togglePlay()
 }
 
 const prevSong = () => {
@@ -353,13 +348,21 @@ const formatTime = (time: number) => {
 }
 
 .close-btn, .more-btn {
-  --color: rgba(255, 255, 255, 0.9);
-  --background: rgba(255, 255, 255, 0.1);
-  --border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.9);
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover, .more-btn:hover {
+  color: white;
+  transform: scale(1.1);
 }
 
 .header-title {
@@ -527,18 +530,18 @@ const formatTime = (time: number) => {
 .control-btn.primary {
   width: 68px;
   height: 68px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--s-primary-light);
+  color: var(--s-text-primary);
   font-size: 28px;
   box-shadow: 
-    0 6px 24px rgba(102, 126, 234, 0.4),
+    0 6px 24px var(--s-shadow),
     0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
 .control-btn.primary:hover {
   transform: scale(1.05);
   box-shadow: 
-    0 8px 32px rgba(102, 126, 234, 0.6),
+    0 8px 32px var(--s-shadow),
     0 0 0 3px rgba(255, 255, 255, 0.15);
 }
 
@@ -644,8 +647,8 @@ const formatTime = (time: number) => {
   }
 
   .close-btn, .more-btn {
-    width: 40px;
-    height: 40px;
+    padding: 6px;
+    font-size: 20px;
   }
 }
 

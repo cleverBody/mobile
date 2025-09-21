@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { Howl } from 'howler'
 import { musicApi } from '@/api/music'
 import { toastController } from '@ionic/vue'
+import { useSettingsStore } from './settings'
 
 export interface Song {
   id: number
@@ -55,6 +56,9 @@ const showToast = async (message: string, color: 'success' | 'warning' | 'danger
 }
 
 export const useMusicStore = defineStore('music', () => {
+  // 获取设置store
+  const settingsStore = useSettingsStore()
+  
   // 状态
   const currentSong = ref<Song | null>(null)
   const playlist = ref<Song[]>([])
@@ -152,6 +156,33 @@ export const useMusicStore = defineStore('music', () => {
           } catch (fallbackErr) {
             console.warn(`降级音质 ${level} 失败:`, fallbackErr)
           }
+        }
+      }
+
+      // 如果所有音质都失败，尝试解锁
+      if (!songUrl && settingsStore.useSongUnlock) {
+        console.warn('所有音质都失败，尝试解锁歌曲...')
+        
+        try {
+          // 尝试网易云解锁
+          console.log('尝试网易云解锁...')
+          const neteaseResult = await musicApi.unlockNeteaseUrl(song.id)
+          if (neteaseResult.code === 200 && neteaseResult.url) {
+            songUrl = neteaseResult.url
+            console.log('✅ 网易云解锁成功')
+          } else {
+            // 尝试酷我解锁
+            console.log('网易云解锁失败，尝试酷我解锁...')
+            const artist = song.artists?.[0]?.name || ''
+            const keyword = `${song.name}-${artist}`
+            const kuwoResult = await musicApi.unlockKuwoUrl(keyword)
+            if (kuwoResult.code === 200 && kuwoResult.url) {
+              songUrl = kuwoResult.url
+              console.log('✅ 酷我解锁成功')
+            }
+          }
+        } catch (unlockErr) {
+          console.warn('解锁失败:', unlockErr)
         }
       }
 

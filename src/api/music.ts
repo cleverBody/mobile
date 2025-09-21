@@ -24,7 +24,7 @@ const getBaseURL = () => {
 // API基础配置
 const api = axios.create({
   baseURL: getBaseURL(),
-  timeout: 10000,
+  timeout: 15000, // 增加超时时间到15秒，因为解锁可能需要更长时间
 })
 
 // 请求拦截器
@@ -181,6 +181,20 @@ export const musicApi = {
   getSearchSuggest(keywords: string): Promise<{ result: { songs?: Song[], artists?: Artist[], albums?: Album[], playlists?: Playlist[] } }> {
     return api.get('/search_suggest', {
       params: { keywords }
+    })
+  },
+
+  // 解锁歌曲 - 网易云
+  unlockNeteaseUrl(id: number): Promise<{ code: number, url: string | null }> {
+    return api.get('/unblock/netease', {
+      params: { id }
+    })
+  },
+
+  // 解锁歌曲 - 酷我
+  unlockKuwoUrl(keyword: string): Promise<{ code: number, url: string | null }> {
+    return api.get('/unblock/kuwo', {
+      params: { keyword }
     })
   },
 }
