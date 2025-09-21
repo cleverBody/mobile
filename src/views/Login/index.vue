@@ -3,9 +3,7 @@
     <IonContent :fullscreen="true" class="login-page">
       <!-- 顶部按钮 -->
       <div class="top-buttons">
-        <IonButton fill="clear" @click="$router.back()" class="back-btn">
-          <IonIcon :icon="arrowBackOutline" />
-        </IonButton>
+        <BackButton />
 
         <IonButton fill="clear" @click="handleGuestLogin" class="guest-btn" :disabled="guestLoading">
           <span v-if="!guestLoading">游客体验</span>
@@ -125,7 +123,6 @@ import {
   toastController
 } from '@ionic/vue'
 import {
-  arrowBackOutline,
   musicalNotesOutline,
   callOutline,
   mailOutline,
@@ -142,9 +139,14 @@ import {
 } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../../stores/user'
+import { useSwipeBack } from '@/composables/useSwipeBack'
+import BackButton from '@/components/common/BackButton.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+// 启用侧滑返回
+const { goBack } = useSwipeBack()
 
 // 登录方式
 const loginMethods = [

@@ -5,13 +5,7 @@
         <!-- 自定义搜索头部 -->
         <div class="search-header">
           <div class="search-bar-container">
-            <IonButton
-              fill="clear"
-              class="back-button"
-              @click="goBack"
-            >
-              <IonIcon :icon="arrowBackOutline" />
-            </IonButton>
+            <BackButton />
             
             <div class="search-bar" :class="{ 'search-bar-focused': isSearchFocused }">
               <IonIcon :icon="searchOutline" class="search-icon" />
@@ -251,7 +245,6 @@ import {
   IonSegmentButton
 } from '@ionic/vue'
 import {
-  arrowBackOutline,
   trashOutline,
   timeOutline,
   closeOutline,
@@ -265,10 +258,15 @@ import {
 import { useRouter } from 'vue-router'
 import { useSearchStore } from '@/stores/search'
 import { useMusicStore } from '@/stores/music'
+import { useSwipeBack } from '@/composables/useSwipeBack'
+import BackButton from '@/components/common/BackButton.vue'
 
 const router = useRouter()
 const searchStore = useSearchStore()
 const musicStore = useMusicStore()
+
+// 启用侧滑返回
+const { goBack } = useSwipeBack()
 
 // 响应式状态
 const searchQuery = ref('')
@@ -291,10 +289,6 @@ const hasResults = computed(() => {
 })
 
 // 方法
-const goBack = () => {
-  router.back()
-}
-
 const handleSearch = async () => {
   // 清除之前的定时器
   if (searchTimeout) {
@@ -413,16 +407,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.back-button {
-  --background: var(--s-surface);
-  --border-radius: 50%;
-  --color: var(--s-text-primary);
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px var(--s-shadow-light);
 }
 
 .search-bar {

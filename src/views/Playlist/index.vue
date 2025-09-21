@@ -10,14 +10,7 @@
 
           <!-- 顶部操作栏 -->
           <div class="top-bar">
-            <IonButton
-              fill="clear"
-              color="light"
-              @click="goBack"
-              class="back-button"
-            >
-              <IonIcon :icon="arrowBackOutline" />
-            </IonButton>
+            <BackButton color="light" />
 
             <div class="top-actions">
               <IonButton fill="clear" color="light" @click="sharePlaylist">
@@ -251,11 +244,16 @@ import {
 import { useRoute, useRouter } from 'vue-router'
 import { usePlaylistStore } from '@/stores/playlist'
 import { useMusicStore } from '@/stores/music'
+import { useSwipeBack } from '@/composables/useSwipeBack'
+import BackButton from '@/components/common/BackButton.vue'
 
 const route = useRoute()
 const router = useRouter()
 const playlistStore = usePlaylistStore()
 const musicStore = useMusicStore()
+
+// 启用侧滑返回
+const { goBack } = useSwipeBack()
 
 // 响应式状态
 const loading = ref(true)
@@ -276,10 +274,6 @@ const sortedSongs = computed(() => {
 })
 
 // 方法
-const goBack = () => {
-  router.back()
-}
-
 const sharePlaylist = () => {
   // TODO: 分享歌单
   console.log('分享歌单')
