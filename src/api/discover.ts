@@ -45,7 +45,7 @@ export const playlistApi = {
 export const toplistApi = {
   // 获取所有榜单（包含歌曲信息）
   getTopPlaylists() {
-    return api.get('/toplist/detail')
+    return api.get('/toplist')
   }
 }
 

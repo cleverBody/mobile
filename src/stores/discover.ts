@@ -164,7 +164,7 @@ export const useDiscoverStore = defineStore('discover', () => {
     id: item.id,
     name: item.name,
     cover: item.picUrl || item.img1v1Url || '/images/artist.jpg',
-    followers: item.followeds || 0,
+    followers: item.fansCount || item.followeds || 0,
     description: item.briefDesc || '',
     albumSize: item.albumSize || 0,
     musicSize: item.musicSize || 0
