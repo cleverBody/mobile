@@ -405,22 +405,22 @@ onMounted(() => {
   top: 0;
   background: var(--ion-background-color);
   z-index: 10;
-  padding: var(--ion-safe-area-top) 16px 16px;
+  padding: calc(var(--ion-safe-area-top) + 12px) 16px 12px;
   box-shadow: 0 2px 8px var(--s-shadow-light);
 }
 
 .search-bar-container {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .back-button {
   --background: var(--s-surface);
   --border-radius: 50%;
   --color: var(--s-text-primary);
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   flex-shrink: 0;
   box-shadow: 0 2px 8px var(--s-shadow-light);
 }
@@ -429,9 +429,9 @@ onMounted(() => {
   display: flex;
   align-items: center;
   flex: 1;
-  padding: 14px 20px;
+  padding: 12px 16px;
   background: var(--s-surface);
-  border-radius: 28px;
+  border-radius: 24px;
   border: 1px solid var(--s-border-light);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 12px var(--s-shadow-light);
@@ -445,8 +445,8 @@ onMounted(() => {
 
 .search-icon {
   color: var(--s-text-tertiary);
-  margin-right: 14px;
-  font-size: 20px;
+  margin-right: 12px;
+  font-size: 18px;
   transition: color 0.3s ease;
   flex-shrink: 0;
 }
@@ -460,7 +460,7 @@ onMounted(() => {
   border: none;
   outline: none;
   background: transparent;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 400;
   color: var(--s-text-primary);
   letter-spacing: 0.2px;
