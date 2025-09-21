@@ -176,6 +176,24 @@
                 </IonButton>
               </div>
             </div>
+
+            <!-- 无限滚动 -->
+            <IonInfiniteScroll 
+              @ionInfinite="loadMoreSongs" 
+              threshold="100px" 
+              :disabled="!hasMoreSongs"
+            >
+              <IonInfiniteScrollContent
+                loading-spinner="bubbles"
+                loading-text="加载更多歌曲..."
+              >
+              </IonInfiniteScrollContent>
+            </IonInfiniteScroll>
+
+            <!-- 没有更多提示 -->
+            <div v-if="!hasMoreSongs && artistSongs.length > 0" class="no-more">
+              已显示全部 {{ artistSongs.length }} 首歌曲
+            </div>
           </div>
 
           <!-- 专辑列表 -->
@@ -260,6 +278,8 @@ import {
   IonSegment,
   IonSegmentButton,
   IonLabel,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   actionSheetController,
   toastController
 } from '@ionic/vue'
@@ -292,7 +312,7 @@ const selectedTab = ref('songs')
 const descriptionExpanded = ref(false)
 
 // 使用 storeToRefs 保持响应性
-const { currentArtist, artistSongs, artistAlbums, artistVideos, similarArtists, loading } = storeToRefs(artistStore)
+const { currentArtist, artistSongs, artistAlbums, artistVideos, similarArtists, loading, loadingMore, hasMoreSongs } = storeToRefs(artistStore)
 const currentSong = computed(() => musicStore.currentSong)
 
 onMounted(() => {
@@ -445,6 +465,15 @@ const showToast = async (message: string) => {
     position: 'bottom'
   })
   await toast.present()
+}
+
+// 加载更多歌曲
+const loadMoreSongs = async (event: any) => {
+  const artistId = parseInt(route.params.id as string)
+  if (artistId && hasMoreSongs.value) {
+    await artistStore.loadArtistSongs(artistId, false)
+  }
+  event.target.complete()
 }
 </script>
 
