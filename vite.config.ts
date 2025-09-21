@@ -14,8 +14,8 @@ export default defineConfig({
     port: 8080,
     proxy: {
       '/api': {
-        target: 'https://netease-proxy-server.onrender.com',
-        // target: 'http://localhost:3000',
+        // target: 'https://netease-proxy-server.onrender.com',
+        target: 'http://localhost:3000',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/api'),
         secure: false

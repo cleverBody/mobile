@@ -82,6 +82,19 @@
                 @ionChange="handleFadeToggle"
               />
             </IonItem>
+
+            <IonItem>
+              <IonIcon :icon="lockOpenOutline" slot="start" />
+              <IonLabel>
+                <h3>音乐解锁</h3>
+                <p>在无法正常播放时进行替换，可能会与原曲不符</p>
+              </IonLabel>
+              <IonToggle
+                slot="end"
+                :checked="settingsStore.useSongUnlock"
+                @ionChange="handleUnlockToggle"
+              />
+            </IonItem>
           </IonList>
         </div>
 
@@ -290,6 +303,7 @@ import {
   musicalNotesOutline,
   shuffleOutline,
   timerOutline,
+  lockOpenOutline,
   colorPaletteOutline,
   brushOutline,
   textOutline,
@@ -343,6 +357,10 @@ const handleThemeChange = (event: CustomEvent) => {
 
 const handleFadeToggle = (event: CustomEvent) => {
   fadeInOut.value = event.detail.checked
+}
+
+const handleUnlockToggle = (event: CustomEvent) => {
+  settingsStore.useSongUnlock = event.detail.checked
 }
 
 const handleDynamicThemeToggle = (event: CustomEvent) => {

@@ -6,6 +6,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const theme = ref<'light' | 'dark' | 'auto'>('auto')
   const language = ref('zh-CN')
   const audioQuality = ref<'128' | '192' | '320' | 'lossless'>('320')
+  const useSongUnlock = ref(true) // 音乐解锁功能
   
   // 方法
   const setTheme = (newTheme: typeof theme.value) => {
@@ -40,6 +41,7 @@ export const useSettingsStore = defineStore('settings', () => {
     theme,
     language,
     audioQuality,
+    useSongUnlock,
     
     // 方法
     setTheme,

@@ -41,7 +41,7 @@ export const usePlayerStore = defineStore('player', () => {
       const response = await musicApi.getSongUrl(songId)
       if (response.data && response.data.length > 0) {
         const songData = response.data.find(item => item.id === songId)
-        alert(songData)
+        // alert(songData)
         if (songData?.url) {
           return songData.url
         } else {
