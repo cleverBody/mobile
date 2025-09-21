@@ -1,110 +1,110 @@
 <template>
   <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/discover"></ion-back-button>
-        </ion-buttons>
-        <ion-title>歌手分类</ion-title>
-      </ion-toolbar>
-    </ion-header>
+    <ion-content :fullscreen="true" class="artists-content">
+      <div class="artists-page">
+        <!-- 顶部操作栏 -->
+        <div class="top-bar">
+          <BackButton />
+          <h1 class="page-title">歌手分类</h1>
+          <div class="spacer"></div>
+        </div>
 
-    <ion-content class="artists-content">
-      <!-- 筛选条件 -->
-      <div class="filter-section">
-        <!-- 语种 -->
-        <div class="filter-group">
-          <h3 class="filter-title">语种</h3>
-          <div class="filter-options">
-            <ion-chip 
-              v-for="area in areaOptions" 
-              :key="area.value"
-              :color="selectedArea === area.value ? 'primary' : 'medium'"
-              @click="selectArea(area.value)"
-            >
-              <ion-label>{{ area.label }}</ion-label>
-            </ion-chip>
+        <!-- 筛选条件 -->
+        <div class="filter-section">
+          <!-- 语种 -->
+          <div class="filter-group">
+            <h3 class="filter-title">语种</h3>
+            <div class="filter-options">
+              <ion-chip 
+                v-for="area in areaOptions" 
+                :key="area.value"
+                :color="selectedArea === area.value ? 'primary' : 'medium'"
+                @click="selectArea(area.value)"
+              >
+                <ion-label>{{ area.label }}</ion-label>
+              </ion-chip>
+            </div>
+          </div>
+
+          <!-- 分类 -->
+          <div class="filter-group">
+            <h3 class="filter-title">分类</h3>
+            <div class="filter-options">
+              <ion-chip 
+                v-for="type in typeOptions" 
+                :key="type.value"
+                :color="selectedType === type.value ? 'primary' : 'medium'"
+                @click="selectType(type.value)"
+              >
+                <ion-label>{{ type.label }}</ion-label>
+              </ion-chip>
+            </div>
+          </div>
+
+          <!-- 首字母 -->
+          <div class="filter-group">
+            <h3 class="filter-title">首字母</h3>
+            <div class="initial-grid">
+              <ion-chip 
+                v-for="initial in initialOptions" 
+                :key="initial.value"
+                :color="selectedInitial === initial.value ? 'primary' : 'medium'"
+                @click="selectInitial(initial.value)"
+                class="initial-chip"
+              >
+                <ion-label>{{ initial.label }}</ion-label>
+              </ion-chip>
+            </div>
           </div>
         </div>
 
-        <!-- 分类 -->
-        <div class="filter-group">
-          <h3 class="filter-title">分类</h3>
-          <div class="filter-options">
-            <ion-chip 
-              v-for="type in typeOptions" 
-              :key="type.value"
-              :color="selectedType === type.value ? 'primary' : 'medium'"
-              @click="selectType(type.value)"
-            >
-              <ion-label>{{ type.label }}</ion-label>
-            </ion-chip>
+        <!-- 歌手列表 -->
+        <div class="artists-list">
+          <div 
+            v-for="artist in artists" 
+            :key="artist.id"
+            class="artist-item"
+            @click="goToArtist(artist.id)"
+          >
+            <div class="artist-avatar">
+              <img :src="artist.cover" :alt="artist.name" />
+            </div>
+            <div class="artist-info">
+              <h3 class="artist-name">{{ artist.name }}</h3>
+              <p class="artist-stats">
+                <span>{{ artist.albumSize || 0 }}张专辑</span>
+                <span>{{ artist.musicSize || 0 }}首歌曲</span>
+              </p>
+            </div>
+            <ion-button fill="clear" size="small">
+              <ion-icon :icon="chevronForward"></ion-icon>
+            </ion-button>
           </div>
         </div>
 
-        <!-- 首字母 -->
-        <div class="filter-group">
-          <h3 class="filter-title">首字母</h3>
-          <div class="initial-grid">
-            <ion-chip 
-              v-for="initial in initialOptions" 
-              :key="initial.value"
-              :color="selectedInitial === initial.value ? 'primary' : 'medium'"
-              @click="selectInitial(initial.value)"
-              class="initial-chip"
-            >
-              <ion-label>{{ initial.label }}</ion-label>
-            </ion-chip>
-          </div>
-        </div>
-      </div>
-
-      <!-- 歌手列表 -->
-      <div class="artists-list">
-        <div 
-          v-for="artist in artists" 
-          :key="artist.id"
-          class="artist-item"
-          @click="goToArtist(artist.id)"
+        <!-- 加载更多 -->
+        <ion-infinite-scroll 
+          @ionInfinite="loadMore" 
+          threshold="100px" 
+          :disabled="!hasMore"
         >
-          <div class="artist-avatar">
-            <img :src="artist.cover" :alt="artist.name" />
-          </div>
-          <div class="artist-info">
-            <h3 class="artist-name">{{ artist.name }}</h3>
-            <p class="artist-stats">
-              <span>{{ artist.albumSize || 0 }}张专辑</span>
-              <span>{{ artist.musicSize || 0 }}首歌曲</span>
-            </p>
-          </div>
-          <ion-button fill="clear" size="small">
-            <ion-icon :icon="chevronForward"></ion-icon>
-          </ion-button>
+          <ion-infinite-scroll-content
+            loading-spinner="bubbles"
+            loading-text="加载更多歌手..."
+          >
+          </ion-infinite-scroll-content>
+        </ion-infinite-scroll>
+
+        <!-- 没有更多提示 -->
+        <div v-if="!hasMore && artists.length > 0" class="no-more">
+          没有更多了
         </div>
-      </div>
 
-      <!-- 加载更多 -->
-      <ion-infinite-scroll 
-        @ionInfinite="loadMore" 
-        threshold="100px" 
-        :disabled="!hasMore"
-      >
-        <ion-infinite-scroll-content
-          loading-spinner="bubbles"
-          loading-text="加载更多歌手..."
-        >
-        </ion-infinite-scroll-content>
-      </ion-infinite-scroll>
-
-      <!-- 没有更多提示 -->
-      <div v-if="!hasMore && artists.length > 0" class="no-more">
-        没有更多了
-      </div>
-
-      <!-- 加载状态 -->
-      <div v-if="loading && artists.length === 0" class="loading-state">
-        <ion-spinner name="bubbles"></ion-spinner>
-        <p>加载中...</p>
+        <!-- 加载状态 -->
+        <div v-if="loading && artists.length === 0" class="loading-state">
+          <ion-spinner name="bubbles"></ion-spinner>
+          <p>加载中...</p>
+        </div>
       </div>
     </ion-content>
   </ion-page>
@@ -114,12 +114,13 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonButtons, IonBackButton, IonButton, IonIcon, IonChip,
+  IonPage, IonContent, IonButton, IonIcon, IonChip,
   IonLabel, IonInfiniteScroll, IonInfiniteScrollContent, IonSpinner
 } from '@ionic/vue'
 import { chevronForward } from 'ionicons/icons'
 import { artistApi } from '@/api/discover'
+import { useSwipeBack } from '@/composables/useSwipeBack'
+import BackButton from '@/components/common/BackButton.vue'
 
 interface Artist {
   id: number
@@ -130,6 +131,10 @@ interface Artist {
 }
 
 const router = useRouter()
+
+// 启用侧滑返回
+const { goBack } = useSwipeBack()
+
 const loading = ref(false)
 const artists = ref<Artist[]>([])
 const hasMore = ref(true)
@@ -269,6 +274,34 @@ const goToArtist = (id: number) => {
 <style scoped>
 .artists-content {
   --background: var(--ion-color-light);
+}
+
+.artists-page {
+  padding-bottom: 120px;
+}
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  background: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0;
+  flex: 1;
+  text-align: center;
+}
+
+.spacer {
+  min-width: 44px;
 }
 
 .filter-section {

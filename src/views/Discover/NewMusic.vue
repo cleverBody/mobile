@@ -1,53 +1,52 @@
 <template>
-  <ion-page>
-    <ion-header>
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-back-button default-href="/tabs/discover"></ion-back-button>
-        </ion-buttons>
-        <ion-title>最新音乐</ion-title>
-      </ion-toolbar>
-    </ion-header>
-
-    <ion-content class="new-music-content">
-      <!-- 分类选择 -->
-      <div class="category-section">
-        <ion-segment
-          v-model="selectedCategory"
-          @ionChange="onCategoryChange"
-          scrollable
-        >
-          <ion-segment-button value="songs">
-            <ion-label>新歌速递</ion-label>
-          </ion-segment-button>
-          <ion-segment-button value="albums">
-            <ion-label>新碟上架</ion-label>
-          </ion-segment-button>
-        </ion-segment>
-      </div>
-
-      <!-- 新歌速递 -->
-      <div v-if="selectedCategory === 'songs'" class="songs-section">
-        <!-- 地区筛选 -->
-        <div class="area-filter">
-          <ion-chip
-            v-for="area in songAreas"
-            :key="area.value"
-            :color="selectedSongArea === area.value ? 'primary' : 'medium'"
-            @click="selectSongArea(area.value)"
-          >
-            <ion-label>{{ area.label }}</ion-label>
-          </ion-chip>
+  <IonPage>
+    <IonContent :fullscreen="true" class="new-music-content">
+      <div class="new-music-page">
+        <!-- 顶部操作栏 -->
+        <div class="top-bar">
+          <BackButton />
+          <h1 class="page-title">最新音乐</h1>
+          <div class="spacer"></div>
         </div>
 
-        <!-- 歌曲列表 -->
-        <div class="songs-list">
-          <div
-            v-for="(song, index) in newSongs"
-            :key="song.id"
-            class="song-item"
-            @click="playSong(song)"
+        <!-- 分类选择 -->
+        <div class="category-section">
+          <IonSegment
+            v-model="selectedCategory"
+            @ionChange="onCategoryChange"
+            scrollable
           >
+            <IonSegmentButton value="songs">
+              <IonLabel>新歌速递</IonLabel>
+            </IonSegmentButton>
+            <IonSegmentButton value="albums">
+              <IonLabel>新碟上架</IonLabel>
+            </IonSegmentButton>
+          </IonSegment>
+        </div>
+
+        <!-- 新歌速递 -->
+        <div v-if="selectedCategory === 'songs'" class="songs-section">
+          <!-- 地区筛选 -->
+          <div class="area-filter">
+            <IonChip
+              v-for="area in songAreas"
+              :key="area.value"
+              :color="selectedSongArea === area.value ? 'primary' : 'medium'"
+              @click="selectSongArea(area.value)"
+            >
+              <IonLabel>{{ area.label }}</IonLabel>
+            </IonChip>
+          </div>
+
+          <!-- 歌曲列表 -->
+          <div class="songs-list">
+            <div
+              v-for="(song, index) in newSongs"
+              :key="song.id"
+              class="song-item"
+              @click="playSong(song)"
+            >
             <div class="song-index">{{ index + 1 }}</div>
             <div class="song-cover">
               <img :src="song.cover" :alt="song.name" />
@@ -113,31 +112,34 @@
         </ion-infinite-scroll>
       </div>
 
-      <!-- 没有更多提示 -->
-      <div v-if="!hasMore && items.length > 0" class="no-more">
-        没有更多了
-      </div>
+        <!-- 没有更多提示 -->
+        <div v-if="!hasMore && items.length > 0" class="no-more">
+          没有更多了
+        </div>
 
-      <!-- 加载状态 -->
-      <div v-if="loading && items.length === 0" class="loading-state">
-        <ion-spinner name="bubbles"></ion-spinner>
-        <p>加载中...</p>
+        <!-- 加载状态 -->
+        <div v-if="loading && items.length === 0" class="loading-state">
+          <IonSpinner name="bubbles" />
+          <p>加载中...</p>
+        </div>
       </div>
-    </ion-content>
-  </ion-page>
+    </IonContent>
+  </IonPage>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import {
-  IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
-  IonButtons, IonBackButton, IonButton, IonIcon, IonSegment,
+  IonPage, IonContent,
+  IonButton, IonIcon, IonSegment,
   IonSegmentButton, IonLabel, IonChip, IonInfiniteScroll,
   IonInfiniteScrollContent, IonSpinner
 } from '@ionic/vue'
 import { play, ellipsisHorizontal } from 'ionicons/icons'
 import { newMusicApi } from '@/api/discover'
+import { useSwipeBack } from '@/composables/useSwipeBack'
+import BackButton from '@/components/common/BackButton.vue'
 
 interface Song {
   id: number
@@ -157,6 +159,10 @@ interface Album {
 }
 
 const router = useRouter()
+
+// 启用侧滑返回
+const { goBack } = useSwipeBack()
+
 const loading = ref(false)
 const selectedCategory = ref('songs')
 
