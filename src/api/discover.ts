@@ -59,7 +59,7 @@ export const artistApi = {
     offset: number = 0,
     limit: number = 50
   ) {
-    return api.get('/artist/list', {
+    return api.get('/top/artists', {
       params: { type, area, initial, offset, limit }
     })
   },

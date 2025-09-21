@@ -113,7 +113,7 @@ export const musicApi = {
 
   // 获取热门歌手
   getTopArtists(limit = 50, offset = 0): Promise<{ artists: Artist[] }> {
-    return api.get('/top_artists', {
+    return api.get('/top/artists', {
       params: { limit, offset }
     })
   },
