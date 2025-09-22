@@ -3,11 +3,6 @@
     <IonHeader>
       <IonToolbar>
         <IonTitle>发现音乐</IonTitle>
-        <IonButtons slot="end">
-          <IonButton @click="openSearch">
-            <IonIcon :icon="searchOutline" />
-          </IonButton>
-        </IonButtons>
       </IonToolbar>
     </IonHeader>
 
@@ -179,8 +174,6 @@ import {
   IonToolbar,
   IonTitle,
   IonContent,
-  IonButton,
-  IonButtons,
   IonIcon
 } from '@ionic/vue'
 import {
