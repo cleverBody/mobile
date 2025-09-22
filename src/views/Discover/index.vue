@@ -174,7 +174,8 @@ import {
   IonToolbar,
   IonTitle,
   IonContent,
-  IonIcon
+  IonIcon,
+  IonButton
 } from '@ionic/vue'
 import {
   searchOutline,
