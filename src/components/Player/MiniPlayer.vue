@@ -26,7 +26,13 @@
         <!-- 歌曲信息 -->
         <div class="song-info">
           <div class="song-name">{{ currentSong.name }}</div>
-          <div class="artist-name">{{ currentSong.artists?.map(a => a.name).join(', ') }}</div>
+          <div class="artist-info">
+            <span class="artist-name">{{ currentSong.artists?.map(a => a.name).join(', ') }}</span>
+            <!-- 音源状态指示器 -->
+            <span v-if="currentAudioSource" class="audio-source-badge" :class="{ 'alternative': isAlternativeSource }">
+              {{ isLoadingAlternativeSource ? '切换中...' : currentAudioSource }}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -111,6 +117,13 @@ const currentSong = computed(() => musicStore.currentSong)
 const isPlaying = computed(() => musicStore.isPlaying)
 const isLiked = computed(() => musicStore.isLiked(currentSong.value?.id))
 const progressPercent = computed(() => musicStore.progress)
+
+// 多源播放状态
+const currentAudioSource = computed(() => musicStore.currentAudioSource)
+const isLoadingAlternativeSource = computed(() => musicStore.isLoadingAlternativeSource)
+const isAlternativeSource = computed(() => 
+  currentAudioSource.value && currentAudioSource.value !== '网易云音乐'
+)
 
 // 检测是否在tabs布局中（首页等）
 const isInTabsLayout = computed(() => {
@@ -317,6 +330,13 @@ const handleImageError = (event: Event) => {
   line-height: 1.3;
 }
 
+.artist-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .artist-name {
   font-size: 12px;
   color: var(--ion-color-step-600, #666);
@@ -324,6 +344,34 @@ const handleImageError = (event: Event) => {
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+}
+
+/* === 音源状态徽章 === */
+.audio-source-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--ion-color-primary, #3880ff);
+  color: white;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+}
+
+.audio-source-badge.alternative {
+  background: var(--ion-color-warning, #ffc409);
+  color: var(--ion-color-warning-contrast, #000);
+  animation: sourceSwitch 0.5s ease-in-out;
+}
+
+@keyframes sourceSwitch {
+  0% { transform: scale(0.8); opacity: 0; }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 0.9; }
 }
 
 /* === 控制区域 === */

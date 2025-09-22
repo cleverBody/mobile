@@ -78,61 +78,82 @@ export const useSearchStore = defineStore('search', () => {
 
     loading.value = true
     try {
-      // 调用搜索建议接口
-      const data = await musicApi.getSearchSuggest(query)
+      console.log('🔍 [搜索Store] 开始多源搜索:', query)
+      
+      // 使用多源搜索API
+      const songs = await musicApi.searchSongsMultiSource(query, 30)
+      
+      console.log(`✅ [搜索Store] 多源搜索完成，返回 ${songs.length} 首歌曲`)
+      
+      // 处理歌曲结果 - 转换为搜索结果格式
+      const formattedSongs = songs.map((song: any) => ({
+        id: song.id,
+        name: song.name,
+        artists: song.artists || [],
+        album: song.album,
+        cover: song.cover || '',
+        duration: Math.floor((song.duration || 0) / 1000),
+        // 保留多源数据
+        source: song.source,
+        url_id: song.url_id,
+        lyric_id: song.lyric_id,
+        pic_id: song.pic_id
+      }))
 
-      // 按照实际API响应结构处理数据
-      if (data.result) {
-        const result = data.result
+      // 同时尝试获取其他类型的搜索结果（使用原有API作为补充）
+      let artists: any[] = []
+      let albums: any[] = []
+      let playlists: any[] = []
+      
+      try {
+        console.log('🔍 [搜索Store] 补充搜索其他类型内容')
+        const supplementData = await musicApi.getSearchSuggest(query)
+        
+        if (supplementData.result) {
+          const result = supplementData.result
+          
+          // 处理歌手结果
+          artists = (result.artists || []).map((artist: any) => ({
+            id: artist.id,
+            name: artist.name,
+            cover: artist.picUrl || artist.img1v1Url || '',
+            followers: artist.fansCount || 0
+          }))
 
-        // 处理歌曲结果
-        const songs = (result.songs || []).map((song: any) => ({
-          id: song.id,
-          name: song.name,
-          artists: song.artists || [],
-          album: song.album,
-          cover: song.album?.picUrl || '',
-          duration: Math.floor((song.duration || 0) / 1000)
-        }))
+          // 处理专辑结果
+          albums = (result.albums || []).map((album: any) => ({
+            id: album.id,
+            name: album.name,
+            cover: album.picUrl || '',
+            artist: album.artist?.name || '',
+            releaseDate: album.publishTime ? new Date(album.publishTime).toLocaleDateString() : ''
+          }))
 
-        // 处理歌手结果
-        const artists = (result.artists || []).map((artist: any) => ({
-          id: artist.id,
-          name: artist.name,
-          cover: artist.picUrl || artist.img1v1Url || '',
-          followers: artist.fansCount || 0
-        }))
-
-        // 处理专辑结果
-        const albums = (result.albums || []).map((album: any) => ({
-          id: album.id,
-          name: album.name,
-          cover: album.picUrl || '',
-          artist: album.artist?.name || '',
-          releaseDate: album.publishTime ? new Date(album.publishTime).toLocaleDateString() : ''
-        }))
-
-        // 处理歌单结果
-        const playlists = (result.playlists || []).map((playlist: any) => ({
-          id: playlist.id,
-          name: playlist.name,
-          cover: playlist.coverImgUrl || '',
-          description: playlist.description || '',
-          trackCount: playlist.trackCount || 0,
-          creator: playlist.creator?.nickname || ''
-        }))
-
-        results.value = {
-          songs,
-          artists,
-          albums,
-          playlists
+          // 处理歌单结果
+          playlists = (result.playlists || []).map((playlist: any) => ({
+            id: playlist.id,
+            name: playlist.name,
+            cover: playlist.coverImgUrl || '',
+            description: playlist.description || '',
+            trackCount: playlist.trackCount || 0,
+            creator: playlist.creator?.nickname || ''
+          }))
         }
-      } else {
-        clearResults()
+      } catch (supplementError) {
+        console.warn('⚠️ [搜索Store] 补充搜索失败:', supplementError)
       }
+
+      results.value = {
+        songs: formattedSongs,
+        artists,
+        albums,
+        playlists
+      }
+      
+      console.log(`✅ [搜索Store] 搜索结果汇总: 歌曲${formattedSongs.length}首, 歌手${artists.length}位, 专辑${albums.length}张, 歌单${playlists.length}个`)
+      
     } catch (error) {
-      console.error('搜索失败:', error)
+      console.error('❌ [搜索Store] 搜索失败:', error)
       clearResults()
     } finally {
       loading.value = false

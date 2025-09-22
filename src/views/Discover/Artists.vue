@@ -187,6 +187,14 @@ const loadArtists = async (reset: boolean = true) => {
   
   loading.value = true
   try {
+    console.log('🎵 Loading artists with params:', {
+      type: selectedType.value,
+      area: selectedArea.value,
+      initial: selectedInitial.value,
+      offset: offset.value,
+      limit: 30
+    })
+    
     const response = await artistApi.getArtistList(
       selectedType.value,
       selectedArea.value,
@@ -194,6 +202,8 @@ const loadArtists = async (reset: boolean = true) => {
       offset.value,
       30
     )
+    
+    console.log('🎵 Artists API response:', response)
     
     const newArtists = response.artists?.map(formatArtist) || []
     
@@ -204,6 +214,7 @@ const loadArtists = async (reset: boolean = true) => {
     }
     
     hasMore.value = response.more || false
+    console.log('🎵 Processed artists:', newArtists.length, 'HasMore:', hasMore.value)
   } catch (error) {
     console.error('加载歌手失败:', error)
     // 使用备用数据
@@ -241,16 +252,19 @@ const getMockArtists = (): Artist[] => [
 ]
 
 const selectArea = async (area: number) => {
+  console.log('🎵 Selecting area:', area)
   selectedArea.value = area
   await loadArtists()
 }
 
 const selectType = async (type: number) => {
+  console.log('🎵 Selecting type:', type)
   selectedType.value = type
   await loadArtists()
 }
 
 const selectInitial = async (initial: number | string) => {
+  console.log('🎵 Selecting initial:', initial)
   selectedInitial.value = initial
   await loadArtists()
 }

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { Howl } from 'howler'
 import { musicApi } from '@/api/music'
+import { multiSourceMusicService } from '@/api/multiSourceMusic'
 import { toastController } from '@ionic/vue'
 import { useSettingsStore } from './settings'
 
@@ -72,6 +73,10 @@ export const useMusicStore = defineStore('music', () => {
   const volume = ref(0.8)
   const isMuted = ref(false)
   const playMode = ref<'order' | 'random' | 'repeat'>('order')
+  
+  // 多源播放状态（新增）
+  const currentAudioSource = ref<string>('') // 当前音源名称
+  const isLoadingAlternativeSource = ref(false) // 是否正在加载备用音源
 
   // Howler实例
   let howl: Howl | null = null
@@ -97,98 +102,40 @@ export const useMusicStore = defineStore('music', () => {
     }
   }
 
-  // 加载并播放歌曲
+  // 加载并播放歌曲 - 增强多源支持
   const loadAndPlaySong = async (song: Song) => {
     try {
       console.log('🎵 开始加载歌曲:', song.name)
-      // alert(`开始加载歌曲: ${song.name}`)
+      
+      // 重置多源状态
+      currentAudioSource.value = ''
+      isLoadingAlternativeSource.value = false
 
-      // alert('步骤1: 准备停止当前播放')
       // 停止当前播放
       if (howl) {
-        // alert('步骤2: 发现现有howl实例，正在停止')
         howl.stop()
         howl.unload()
-        // alert('步骤3: howl实例已停止和卸载')
-      } else {
-        // alert('步骤2: 没有现有howl实例')
       }
 
-      // alert('步骤4: 开始检测移动端环境')
       // 检测移动端环境
       const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                       window.location.protocol === 'capacitor:' ||
                       (typeof window !== 'undefined' && (window as any).Capacitor)
 
-      // alert(`步骤5: 移动端检测完成，结果: ${isMobile}`)
       console.log('🎵 移动端检测:', isMobile, 'protocol:', window.location.protocol)
 
-      // alert("步骤6: 跳过移动端音频权限处理，直接获取歌曲URL")
-      // 获取歌曲播放URL
-      console.log('🎵 获取歌曲播放URL...')
-      // alert(`开始获取歌曲URL，歌曲ID: ${song.id}`)
-
-      let songUrl = null
+      // 使用多源API获取播放链接
+      console.log('🎵 使用多源API获取播放链接...')
+      let songUrlResult = null
       
-      // 首先尝试默认音质
-      const urlResponse = await musicApi.getSongUrl(song.id)
-      // alert(`API响应: ${JSON.stringify(urlResponse)}`)
-      
-      songUrl = urlResponse.data?.[0]?.url || null
-      
-      // 如果默认音质失败，尝试降级策略
-      if (!songUrl) {
-        console.warn('歌曲播放链接为空，尝试降级音质获取...')
-        const fallbackLevels = ['standard', 'higher', 'lossless']
-        
-        for (const level of fallbackLevels) {
-          try {
-            console.log(`尝试降级音质 ${level} 获取播放链接...`)
-            const fallbackResponse = await musicApi.getSongUrl(song.id, level)
-            if (fallbackResponse.data && fallbackResponse.data.length > 0) {
-              const fallbackSongData = fallbackResponse.data.find(item => item.id === song.id)
-              if (fallbackSongData?.url) {
-                songUrl = fallbackSongData.url
-                console.log(`降级音质 ${level} 成功获取播放链接`)
-                break
-              }
-            }
-          } catch (fallbackErr) {
-            console.warn(`降级音质 ${level} 失败:`, fallbackErr)
-          }
-        }
+      try {
+        songUrlResult = await musicApi.getMultiSourceSongUrl(song)
+      } catch (error) {
+        console.error('❌ 多源API获取失败:', error)
       }
 
-      // 如果所有音质都失败，尝试解锁
-      if (!songUrl && settingsStore.useSongUnlock) {
-        console.warn('所有音质都失败，尝试解锁歌曲...')
-        
-        try {
-          // 尝试网易云解锁
-          console.log('尝试网易云解锁...')
-          const neteaseResult = await musicApi.unlockNeteaseUrl(song.id)
-          if (neteaseResult.code === 200 && neteaseResult.url) {
-            songUrl = neteaseResult.url
-            console.log('✅ 网易云解锁成功')
-          } else {
-            // 尝试酷我解锁
-            console.log('网易云解锁失败，尝试酷我解锁...')
-            const artist = song.artists?.[0]?.name || ''
-            const keyword = `${song.name}-${artist}`
-            const kuwoResult = await musicApi.unlockKuwoUrl(keyword)
-            if (kuwoResult.code === 200 && kuwoResult.url) {
-              songUrl = kuwoResult.url
-              console.log('✅ 酷我解锁成功')
-            }
-          }
-        } catch (unlockErr) {
-          console.warn('解锁失败:', unlockErr)
-        }
-      }
-
-      if (!songUrl) {
+      if (!songUrlResult) {
         console.error('❌ 无法获取歌曲播放链接')
-        // alert(`❌ 无法获取歌曲播放链接: ${song.name}`)
         
         // 自动跳到下一首
         if (hasNext.value) {
@@ -203,7 +150,19 @@ export const useMusicStore = defineStore('music', () => {
         return
       }
 
-      console.log('✅ 获取到播放URL:', songUrl)
+      const { url: songUrl, source } = songUrlResult
+      currentAudioSource.value = source
+      
+      console.log('✅ 获取到播放URL:', songUrl, '音源:', source)
+      
+      // 如果使用的是备用音源，显示提示
+      if (source !== '网易云音乐') {
+        isLoadingAlternativeSource.value = true
+        showToast(`正在使用 ${source} 播放`, 'success')
+        setTimeout(() => {
+          isLoadingAlternativeSource.value = false
+        }, 3000)
+      }
 
       // 创建新的Howl实例
       console.log('🎵 创建Howl实例...')
@@ -231,6 +190,22 @@ export const useMusicStore = defineStore('music', () => {
           isPlaying.value = false
           nextSong()
           console.log('⏹️ 播放结束')
+        },
+        onloaderror: (id, error) => {
+          console.error('❌ 音频加载错误:', error)
+          showToast('音频加载失败，尝试备用音源', 'warning')
+          
+          // 如果是网易云音源失败，尝试其他音源
+          if (source === '网易云音乐') {
+            loadAlternativeSource(song)
+          }
+        },
+        onplayerror: (id, error) => {
+          console.error('❌ 音频播放错误:', error)
+          showToast('播放失败，尝试备用音源', 'warning')
+          
+          // 尝试备用音源
+          loadAlternativeSource(song)
         }
       })
 
@@ -239,16 +214,95 @@ export const useMusicStore = defineStore('music', () => {
       try {
         howl.play()
         console.log('✅ 播放命令已发送')
-        // alert(`✅ 播放命令已发送: ${song.name}`)
       } catch (playError) {
         console.error('❌ 播放失败:', playError)
-        // alert(`❌ 播放失败: ${playError}`)
+        loadAlternativeSource(song)
       }
-
 
     } catch (error) {
       console.error('加载歌曲失败:', error)
-      // alert(`❌ 加载歌曲失败: ${error}`)
+      showToast('加载歌曲失败', 'danger')
+    }
+  }
+
+  // 加载备用音源（新增）
+  const loadAlternativeSource = async (song: Song) => {
+    if (isLoadingAlternativeSource.value) {
+      console.log('⚠️ 已在加载备用音源，跳过')
+      return
+    }
+    
+    isLoadingAlternativeSource.value = true
+    console.log('🔄 尝试加载备用音源:', song.name)
+    
+    try {
+      // 停止当前实例
+      if (howl) {
+        howl.stop()
+        howl.unload()
+      }
+      
+      // 强制使用多源服务（跳过网易云）
+      const fallbackResult = await multiSourceMusicService.getPlayableUrl(song)
+      
+      if (!fallbackResult) {
+        console.error('❌ 备用音源也无法获取')
+        showToast('所有音源都无法播放', 'danger')
+        
+        // 自动跳到下一首
+        if (hasNext.value) {
+          setTimeout(() => {
+            nextSong()
+          }, 1000)
+        }
+        return
+      }
+      
+      const { url: fallbackUrl, source: fallbackSource } = fallbackResult
+      currentAudioSource.value = fallbackSource
+      
+      console.log('✅ 获取到备用播放URL:', fallbackUrl, '音源:', fallbackSource)
+      showToast(`切换到 ${fallbackSource}`, 'success')
+      
+      // 创建新的Howl实例
+      howl = new Howl({
+        src: [fallbackUrl],
+        html5: false,
+        volume: volume.value,
+        preload: true,
+        onload: () => {
+          duration.value = howl?.duration() || 0
+          console.log('✅ 备用音源加载完成')
+        },
+        onplay: () => {
+          isPlaying.value = true
+          startUpdateTimer()
+          console.log('✅ 备用音源开始播放')
+        },
+        onpause: () => {
+          isPlaying.value = false
+          stopUpdateTimer()
+        },
+        onend: () => {
+          isPlaying.value = false
+          nextSong()
+        },
+        onloaderror: () => {
+          console.error('❌ 备用音源也加载失败')
+          showToast('备用音源加载失败', 'danger')
+        }
+      })
+      
+      // 开始播放备用音源
+      howl.play()
+      
+    } catch (error) {
+      console.error('❌ 备用音源加载异常:', error)
+      showToast('备用音源加载异常', 'danger')
+    } finally {
+      setTimeout(() => {
+        isLoadingAlternativeSource.value = false
+      }, 3000)
     }
   }
 
@@ -426,6 +480,10 @@ export const useMusicStore = defineStore('music', () => {
     volume,
     isMuted,
     playMode,
+    
+    // 多源播放状态
+    currentAudioSource,
+    isLoadingAlternativeSource,
 
     // 计算属性
     hasNext,
@@ -436,6 +494,7 @@ export const useMusicStore = defineStore('music', () => {
     // 方法
     setCurrentSong,
     loadAndPlaySong,
+    loadAlternativeSource,
     setPlaylist,
     togglePlay,
     play,
