@@ -26,6 +26,11 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/Discover/index.vue')
       },
       {
+        path: 'radio',
+        name: 'Radio',
+        component: () => import('@/views/Radio/index.vue')
+      },
+      {
         path: 'collection',
         name: 'Collection',
         component: () => import('@/views/Collection/index.vue')
@@ -86,6 +91,21 @@ const routes: Array<RouteRecordRaw> = [
     path: '/discover/new-music',
     name: 'NewMusic',
     component: () => import('@/views/Discover/NewMusic.vue')
+  },
+  {
+    path: '/radio/category/:id',
+    name: 'RadioCategory',
+    component: () => import('@/views/Radio/Category.vue')
+  },
+  {
+    path: '/radio/station/:id',
+    name: 'RadioStation',
+    component: () => import('@/views/Radio/Station.vue')
+  },
+  {
+    path: '/radio/program/:id',
+    name: 'RadioProgram',
+    component: () => import('@/views/Radio/Program.vue')
   },
   {
     path: '/login',

@@ -221,9 +221,8 @@ const goToSearch = () => {
 }
 
 const goToPodcast = () => {
-  // TODO: 跳转到播客电台页面
-  console.log('跳转到播客电台')
-  router.push('/tabs/discover')
+  // 跳转到移动端电台页面
+  router.push('/tabs/radio')
 }
 
 const goToDiscover = () => {

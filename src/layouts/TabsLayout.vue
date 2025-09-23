@@ -19,6 +19,11 @@
             <IonLabel class="tab-label">发现</IonLabel>
           </IonTabButton>
 
+          <IonTabButton tab="radio" href="/tabs/radio" class="tab-button">
+            <IonIcon :icon="radioOutline" class="tab-icon" />
+            <IonLabel class="tab-label">电台</IonLabel>
+          </IonTabButton>
+
           <IonTabButton tab="collection" href="/tabs/collection" class="tab-button">
             <IonIcon :icon="starOutline" class="tab-icon" />
             <IonLabel class="tab-label">收藏</IonLabel>
@@ -49,6 +54,8 @@ import {
   homeOutline,
   compass,
   compassOutline,
+  radio,
+  radioOutline,
   star,
   starOutline,
   person,
