@@ -6,7 +6,7 @@
         <div class="search-header">
           <div class="search-bar-container">
             <BackButton />
-            
+
             <div class="search-bar" :class="{ 'search-bar-focused': isSearchFocused }">
               <IonIcon :icon="searchOutline" class="search-icon" />
               <input
@@ -18,6 +18,7 @@
                 @input="handleSearch"
                 @focus="isSearchFocused = true"
                 @blur="isSearchFocused = false"
+                @keyup.enter="handleSearch"
               />
               <IonButton
                 v-if="searchQuery"
@@ -38,8 +39,8 @@
           <div v-if="!searchQuery && searchSuggestions.length > 0" class="search-suggestions">
           <h3 class="suggestions-title">热门搜索</h3>
           <div class="suggestions-grid">
-            <IonChip 
-              v-for="suggestion in searchSuggestions" 
+            <IonChip
+              v-for="suggestion in searchSuggestions"
               :key="suggestion"
               @click="searchKeyword(suggestion)"
               outline
@@ -48,7 +49,7 @@
             </IonChip>
           </div>
         </div>
-        
+
         <!-- 搜索历史 -->
         <div v-if="!searchQuery && searchHistory.length > 0" class="search-history">
           <div class="history-header">
@@ -59,17 +60,17 @@
             </IonButton>
           </div>
           <div class="history-list">
-            <div 
-              v-for="(item, index) in searchHistory" 
+            <div
+              v-for="(item, index) in searchHistory"
               :key="index"
               class="history-item"
               @click="searchKeyword(item)"
             >
               <IonIcon :icon="timeOutline" />
               <span>{{ item }}</span>
-              <IonButton 
-                fill="clear" 
-                size="small" 
+              <IonButton
+                fill="clear"
+                size="small"
                 @click.stop="removeHistoryItem(index)"
               >
                 <IonIcon :icon="closeOutline" />
@@ -77,7 +78,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 搜索结果 -->
         <div v-if="searchQuery" class="search-results">
           <!-- 搜索状态 -->
@@ -85,14 +86,14 @@
             <IonSpinner name="circular" />
             <p>搜索中...</p>
           </div>
-          
+
           <!-- 无结果 -->
           <div v-else-if="!hasResults" class="no-results">
             <IonIcon :icon="searchOutline" class="no-results-icon" />
             <h3>未找到相关结果</h3>
             <p>尝试更换关键词或检查拼写</p>
           </div>
-          
+
           <!-- 结果标签页 -->
           <div v-else class="results-content">
             <IonSegment v-model="activeTab" @ionChange="handleTabChange">
@@ -109,19 +110,19 @@
                 <IonLabel>歌单 ({{ searchResults.playlists.length }})</IonLabel>
               </IonSegmentButton>
             </IonSegment>
-            
+
             <!-- 歌曲结果 -->
             <div v-if="activeTab === 'songs'" class="results-section">
               <div class="songs-list">
-                <div 
-                  v-for="(song, index) in searchResults.songs" 
+                <div
+                  v-for="(song, index) in searchResults.songs"
                   :key="song.id"
                   class="song-item"
                   @click="playSong(song, index)"
                 >
                   <div class="song-cover">
-                    <img 
-                      :src="song.cover" 
+                    <img
+                      :src="song.cover"
                       :alt="song.name"
                       @error="handleImageError"
                     />
@@ -136,8 +137,8 @@
                     </p>
                   </div>
                   <div class="song-actions">
-                    <IonButton 
-                      fill="clear" 
+                    <IonButton
+                      fill="clear"
                       size="small"
                       @click.stop="toggleLike(song.id)"
                       :color="musicStore.isLiked(song.id) ? 'primary' : 'medium'"
@@ -151,19 +152,19 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- 歌手结果 -->
             <div v-if="activeTab === 'artists'" class="results-section">
               <div class="artists-grid">
-                <div 
-                  v-for="artist in searchResults.artists" 
+                <div
+                  v-for="artist in searchResults.artists"
                   :key="artist.id"
                   class="artist-card"
                   @click="goToArtist(artist.id)"
                 >
                   <div class="artist-avatar">
-                    <img 
-                      :src="artist.cover" 
+                    <img
+                      :src="artist.cover"
                       :alt="artist.name"
                       @error="handleImageError"
                     />
@@ -173,19 +174,19 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- 专辑结果 -->
             <div v-if="activeTab === 'albums'" class="results-section">
               <div class="albums-grid">
-                <div 
-                  v-for="album in searchResults.albums" 
+                <div
+                  v-for="album in searchResults.albums"
                   :key="album.id"
                   class="album-card"
                   @click="goToAlbum(album.id)"
                 >
                   <div class="album-cover">
-                    <img 
-                      :src="album.cover" 
+                    <img
+                      :src="album.cover"
                       :alt="album.name"
                       @error="handleImageError"
                     />
@@ -195,19 +196,19 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- 歌单结果 -->
             <div v-if="activeTab === 'playlists'" class="results-section">
               <div class="playlists-list">
-                <div 
-                  v-for="playlist in searchResults.playlists" 
+                <div
+                  v-for="playlist in searchResults.playlists"
                   :key="playlist.id"
                   class="playlist-item"
                   @click="goToPlaylist(playlist.id)"
                 >
                   <div class="playlist-cover">
-                    <img 
-                      :src="playlist.cover" 
+                    <img
+                      :src="playlist.cover"
                       :alt="playlist.name"
                       @error="handleImageError"
                     />
@@ -282,9 +283,9 @@ const searchHistory = computed(() => searchStore.history)
 const searchResults = computed(() => searchStore.results)
 const hasResults = computed(() => {
   const results = searchResults.value
-  return results.songs.length > 0 || 
-         results.artists.length > 0 || 
-         results.albums.length > 0 || 
+  return results.songs.length > 0 ||
+         results.artists.length > 0 ||
+         results.albums.length > 0 ||
          results.playlists.length > 0
 })
 
@@ -294,7 +295,7 @@ const handleSearch = async () => {
   if (searchTimeout) {
     clearTimeout(searchTimeout)
   }
-  
+
   // 设置防抖
   searchTimeout = setTimeout(async () => {
     const query = searchQuery.value.trim()
@@ -302,7 +303,7 @@ const handleSearch = async () => {
       searchStore.clearResults()
       return
     }
-    
+
     searching.value = true
     try {
       await searchStore.search(query)
@@ -413,18 +414,20 @@ onMounted(() => {
   display: flex;
   align-items: center;
   flex: 1;
+  height: 48px;
+  min-height: 48px;
+  max-height: 48px;
   padding: 12px 16px;
   background: var(--s-surface);
   border-radius: 24px;
   border: 1px solid var(--s-border-light);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 2px 12px var(--s-shadow-light);
 }
 
 .search-bar-focused {
   border-color: var(--s-primary);
   box-shadow: 0 4px 20px var(--s-shadow);
-  transform: translateY(-1px);
 }
 
 .search-icon {
@@ -441,6 +444,8 @@ onMounted(() => {
 
 .search-input {
   flex: 1;
+  height: 24px;
+  line-height: 24px;
   border: none;
   outline: none;
   background: transparent;
