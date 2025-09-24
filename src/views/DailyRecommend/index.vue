@@ -7,11 +7,11 @@
         <div class="daily-hero">
           <!-- 背景渐变 -->
           <div class="hero-overlay"></div>
-          
+
           <!-- 顶部操作栏 -->
           <div class="top-bar">
             <BackButton color="light" />
-            
+
             <div class="top-actions">
               <IonButton fill="clear" color="light" @click="refresh">
                 <IonIcon :icon="refreshOutline" />
@@ -21,34 +21,34 @@
               </IonButton>
             </div>
           </div>
-          
+
           <!-- 头部内容 -->
           <div class="hero-content">
             <div class="daily-icon">
               <IonIcon :icon="calendarOutline" />
               <span class="date">{{ currentDate }}</span>
             </div>
-            
+
             <div class="daily-info">
               <h1 class="daily-title">每日推荐</h1>
               <p class="daily-subtitle">根据你的音乐品味精心挑选</p>
             </div>
           </div>
-          
+
           <!-- 操作按钮 -->
           <div class="hero-actions">
-            <IonButton 
-              expand="block" 
+            <IonButton
+              expand="block"
               class="play-all-button"
               @click="playAll"
-              :disabled="!dailySongs.length"
+              :disabled="!allSongs.length"
             >
               <IonIcon :icon="play" slot="start" />
-              播放全部 ({{ dailySongs.length }})
+              播放全部 ({{ allSongs.length }})
             </IonButton>
           </div>
         </div>
-        
+
         <!-- 歌曲列表区域 -->
         <div class="content-section">
           <!-- 加载状态 -->
@@ -56,12 +56,18 @@
             <IonSpinner name="circular" />
             <p>正在为你精选音乐...</p>
           </div>
-          
+
           <!-- 歌曲列表 -->
-          <div v-else-if="dailySongs.length > 0" class="songs-list">
-            <div 
-              v-for="(song, index) in dailySongs" 
-              :key="song.id"
+          <div v-else-if="allSongs.length > 0" class="songs-list">
+            <!-- 每日推荐标题 -->
+            <div v-if="dailySongs.length > 0" class="section-title">
+              <h2>每日推荐 ({{ dailySongs.length }})</h2>
+            </div>
+
+            <!-- 每日推荐歌曲 -->
+            <div
+              v-for="(song, index) in dailySongs"
+              :key="`daily-${song.id}`"
               class="song-item"
               :class="{ playing: currentSong?.id === song.id }"
               @click="playSong(song, index)"
@@ -71,17 +77,17 @@
                 <span v-if="currentSong?.id !== song.id">{{ index + 1 }}</span>
                 <IonIcon v-else :icon="volumeHighOutline" color="primary" />
               </div>
-              
+
               <!-- 歌曲信息 -->
               <div class="song-main">
                 <div class="song-cover">
-                  <img 
-                    :src="song.cover || '/images/album.jpg'" 
+                  <img
+                    :src="song.cover || '/images/album.jpg'"
                     :alt="song.name"
                     @error="handleImageError"
                   />
                 </div>
-                
+
                 <div class="song-info">
                   <h3 class="song-name s-text-truncate">{{ song.name }}</h3>
                   <p class="song-meta s-text-secondary s-text-truncate">
@@ -90,25 +96,91 @@
                   </p>
                 </div>
               </div>
-              
+
               <!-- 歌曲操作 -->
               <div class="song-actions">
-                <IonButton 
-                  fill="clear" 
+                <IonButton
+                  fill="clear"
                   size="small"
                   @click.stop="toggleSongLike(song.id)"
                   :color="musicStore.isLiked(song.id) ? 'primary' : 'medium'"
                 >
                   <IonIcon :icon="musicStore.isLiked(song.id) ? heart : heartOutline" />
                 </IonButton>
-                
+
+                <IonButton fill="clear" size="small" @click.stop="showSongMenu(song)">
+                  <IonIcon :icon="ellipsisVerticalOutline" />
+                </IonButton>
+              </div>
+            </div>
+
+            <!-- 推荐歌曲标题 -->
+            <div v-if="recommendSongs.length > 0" class="section-title">
+              <h2>为你推荐 ({{ recommendSongs.length }})</h2>
+              <p class="section-subtitle">基于你的音乐品味推荐</p>
+            </div>
+
+            <!-- 推荐歌曲 -->
+            <div
+              v-for="(song, index) in recommendSongs"
+              :key="`recommend-${song.id}`"
+              class="song-item"
+              :class="{ playing: currentSong?.id === song.id }"
+              @click="playSong(song, dailySongs.length + index)"
+            >
+              <!-- 歌曲编号/播放状态 -->
+              <div class="song-index">
+                <span v-if="currentSong?.id !== song.id">{{ dailySongs.length + index + 1 }}</span>
+                <IonIcon v-else :icon="volumeHighOutline" color="primary" />
+              </div>
+
+              <!-- 歌曲信息 -->
+              <div class="song-main">
+                <div class="song-cover">
+                  <img
+                    :src="song.cover || '/images/album.jpg'"
+                    :alt="song.name"
+                    @error="handleImageError"
+                  />
+                </div>
+
+                <div class="song-info">
+                  <h3 class="song-name s-text-truncate">{{ song.name }}</h3>
+                  <p class="song-meta s-text-secondary s-text-truncate">
+                    {{ song.artists?.map(a => a.name).join(', ') }}
+                    <span v-if="song.album"> - {{ song.album.name }}</span>
+                  </p>
+                </div>
+              </div>
+
+              <!-- 歌曲操作 -->
+              <div class="song-actions">
+                <IonButton
+                  fill="clear"
+                  size="small"
+                  @click.stop="toggleSongLike(song.id)"
+                  :color="musicStore.isLiked(song.id) ? 'primary' : 'medium'"
+                >
+                  <IonIcon :icon="musicStore.isLiked(song.id) ? heart : heartOutline" />
+                </IonButton>
+
                 <IonButton fill="clear" size="small" @click.stop="showSongMenu(song)">
                   <IonIcon :icon="ellipsisVerticalOutline" />
                 </IonButton>
               </div>
             </div>
           </div>
-          
+
+          <!-- 无限滚动 -->
+          <IonInfiniteScroll
+            v-if="allSongs.length > 0 && hasMoreRecommend"
+            @ionInfinite="loadMoreRecommend"
+            threshold="100px"
+          >
+            <IonInfiniteScrollContent loading-text="加载更多推荐...">
+            </IonInfiniteScrollContent>
+          </IonInfiniteScroll>
+
           <!-- 空状态 -->
           <div v-else class="empty-state">
             <IonIcon :icon="musicalNotesOutline" class="empty-icon" />
@@ -131,6 +203,8 @@ import {
   IonButton,
   IonIcon,
   IonSpinner,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent,
   actionSheetController,
   toastController
 } from '@ionic/vue'
@@ -156,9 +230,13 @@ const musicStore = useMusicStore()
 const { goBack } = useSwipeBack()
 
 const dailySongs = ref<any[]>([])
+const recommendSongs = ref<any[]>([])
 const loading = ref(false)
+const loadingMore = ref(false)
+const hasMoreRecommend = ref(true)
 const currentSong = computed(() => musicStore.currentSong)
 const currentDate = computed(() => new Date().getDate())
+const allSongs = computed(() => [...dailySongs.value, ...recommendSongs.value])
 
 onMounted(() => {
   loadDailyRecommend()
@@ -178,6 +256,9 @@ const loadDailyRecommend = async () => {
       const songsResponse = await musicApi.getPlaylistTracks(3778678, 30)
       dailySongs.value = songsResponse.songs.map(formatSong)
     }
+
+    // 自动加载第一批推荐歌曲
+    await loadMoreRecommendSongs()
   } catch (error) {
     console.error('加载每日推荐失败:', error)
     showToast('加载失败，请稍后重试')
@@ -187,8 +268,55 @@ const loadDailyRecommend = async () => {
 }
 
 const refresh = () => {
+  // 重置推荐歌曲
+  recommendSongs.value = []
+  hasMoreRecommend.value = true
   loadDailyRecommend()
   showToast('已刷新推荐内容')
+}
+
+// 加载更多推荐歌曲
+const loadMoreRecommendSongs = async () => {
+  if (loadingMore.value || !hasMoreRecommend.value) return
+
+  loadingMore.value = true
+  try {
+    // 使用个性化推荐API获取更多歌曲
+    const response = await musicApi.getPersonalizedPlaylists(10)
+
+    if (response.result && response.result.length > 0) {
+      // 随机选择一个推荐歌单
+      const randomPlaylist = response.result[Math.floor(Math.random() * response.result.length)]
+
+      // 获取歌单中的歌曲
+      const songsResponse = await musicApi.getPlaylistTracks(randomPlaylist.id, 20)
+      const newSongs = songsResponse.songs.map(formatSong)
+
+      // 过滤掉已存在的歌曲
+      const existingIds = new Set([...dailySongs.value, ...recommendSongs.value].map(s => s.id))
+      const filteredSongs = newSongs.filter(song => !existingIds.has(song.id))
+
+      if (filteredSongs.length > 0) {
+        recommendSongs.value = [...recommendSongs.value, ...filteredSongs]
+      } else {
+        // 如果没有新歌曲，尝试另一个歌单
+        hasMoreRecommend.value = false
+      }
+    } else {
+      hasMoreRecommend.value = false
+    }
+  } catch (error) {
+    console.error('加载推荐歌曲失败:', error)
+    hasMoreRecommend.value = false
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+// 无限滚动处理
+const loadMoreRecommend = async (ev: any) => {
+  await loadMoreRecommendSongs()
+  ev.target.complete()
 }
 
 const moreActions = () => {
@@ -197,13 +325,13 @@ const moreActions = () => {
 }
 
 const playAll = () => {
-  if (dailySongs.value.length > 0) {
-    musicStore.setPlaylist(dailySongs.value, 0)
+  if (allSongs.value.length > 0) {
+    musicStore.setPlaylist(allSongs.value, 0)
   }
 }
 
 const playSong = (song: any, index: number) => {
-  musicStore.setPlaylist(dailySongs.value, index)
+  musicStore.setPlaylist(allSongs.value, index)
 }
 
 const toggleSongLike = (songId: number) => {
@@ -246,7 +374,7 @@ const showSongMenu = async (song: any) => {
       }
     ]
   })
-  
+
   await actionSheet.present()
 }
 
@@ -552,20 +680,43 @@ const showToast = async (message: string) => {
     min-height: 45vh;
     padding: var(--ion-safe-area-top) 16px 16px;
   }
-  
+
   .daily-icon {
     width: 80px;
     height: 80px;
     font-size: 32px;
   }
-  
+
   .daily-title {
     font-size: 28px;
   }
-  
+
   .content-section {
     padding: 20px 16px 16px;
     margin-top: -16px;
   }
+}
+
+/* 分区标题样式 */
+.section-title {
+  margin: 24px 0 16px;
+  padding: 0 4px;
+}
+
+.section-title h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 4px;
+}
+
+.section-subtitle {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+.section-title:first-child {
+  margin-top: 0;
 }
 </style>
