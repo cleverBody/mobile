@@ -3,7 +3,7 @@
     <IonHeader>
       <IonToolbar>
         <IonButtons slot="start">
-          <IonBackButton default-href="/tabs/radio" />
+          <IonBackButton default-href="/tabs/radio" text="" />
         </IonButtons>
         <IonTitle>{{ categoryName || '电台分类' }}</IonTitle>
       </IonToolbar>
@@ -61,9 +61,23 @@
           <p>暂无电台</p>
         </div>
 
-        <!-- 加载更多 -->
-        <div v-if="hasMore && !loading" class="load-more">
-          <IonButton fill="outline" @click="loadMore">加载更多</IonButton>
+        <!-- 无限滚动 -->
+        <IonInfiniteScroll
+          @ionInfinite="onInfiniteScroll"
+          threshold="100px"
+          :disabled="!hasMore"
+          v-if="stations.length > 0"
+        >
+          <IonInfiniteScrollContent
+            loading-spinner="bubbles"
+            loading-text="加载更多电台..."
+          >
+          </IonInfiniteScrollContent>
+        </IonInfiniteScroll>
+
+        <!-- 没有更多提示 -->
+        <div v-if="!hasMore && stations.length > 0" class="no-more">
+          已显示全部电台
         </div>
       </div>
     </IonContent>
@@ -82,7 +96,9 @@ import {
   IonBackButton,
   IonIcon,
   IonButton,
-  IonSpinner
+  IonSpinner,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent
 } from '@ionic/vue'
 import {
   play,
@@ -101,6 +117,7 @@ const radioStore = useRadioStore()
 // 响应式数据
 const stations = ref<RadioStation[]>([])
 const loading = ref(false)
+const loadingMore = ref(false)
 const hasMore = ref(true)
 const offset = ref(0)
 const limit = 20
@@ -110,35 +127,49 @@ const categoryId = computed(() => Number(route.params.id))
 const categoryName = computed(() => route.query.name as string)
 
 // 方法
-const loadStations = async (loadMore = false) => {
-  if (loading.value) return
+const loadStations = async (reset = true) => {
+  if (loading.value || loadingMore.value) return
+  if (!reset && !hasMore.value) return
 
-  loading.value = true
-  
+  if (reset) {
+    loading.value = true
+    offset.value = 0
+    hasMore.value = true
+  } else {
+    loadingMore.value = true
+  }
+
   try {
-    const currentOffset = loadMore ? offset.value : 0
-    // 调用正确的API方法，传入offset参数
-    const result = await radioStore.loadCategoryStations(categoryId.value, limit, currentOffset)
-    
-    if (loadMore) {
-      stations.value = [...stations.value, ...result]
+    const result = await radioStore.loadCategoryStations(categoryId.value, limit, offset.value)
+    const djRadios = result.djRadios || []
+
+    if (reset) {
+      stations.value = djRadios
     } else {
-      stations.value = result
-      offset.value = 0
+      stations.value = [...stations.value, ...djRadios]
     }
-    
-    offset.value = currentOffset + limit
-    hasMore.value = result.length === limit
-    
+
+    // 更新分页状态
+    offset.value += limit
+    hasMore.value = result.hasMore === true
+
+    console.log(`📊 [分类页面] 加载结果: 返回${djRadios.length}条, API hasMore=${result.hasMore}, 本地hasMore=${hasMore.value}, offset=${offset.value}, 总数=${stations.value.length}`)
+
   } catch (error) {
     console.error('加载分类电台失败:', error)
   } finally {
     loading.value = false
+    loadingMore.value = false
   }
 }
 
-const loadMore = () => {
-  loadStations(true)
+// 无限滚动处理
+const onInfiniteScroll = async (ev: any) => {
+  console.log(`🔄 [分类页面] 触发无限滚动, hasMore=${hasMore.value}, loadingMore=${loadingMore.value}`)
+  if (hasMore.value && !loadingMore.value) {
+    await loadStations(false)
+  }
+  ev.target.complete()
 }
 
 const goToStation = (stationId: number) => {
@@ -165,7 +196,7 @@ const handleImageError = (event: Event) => {
 
 // 生命周期
 onMounted(() => {
-  loadStations()
+  loadStations(true)
 })
 </script>
 
@@ -305,6 +336,13 @@ onMounted(() => {
 .load-more {
   margin-top: 32px;
   text-align: center;
+}
+
+.no-more {
+  text-align: center;
+  padding: 20px;
+  color: var(--ion-color-step-600);
+  font-size: 14px;
 }
 
 @media (max-width: 480px) {

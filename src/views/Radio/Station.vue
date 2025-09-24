@@ -3,7 +3,7 @@
     <IonHeader>
       <IonToolbar>
         <IonButtons slot="start">
-          <IonBackButton default-href="/tabs/radio" />
+          <IonBackButton default-href="/tabs/radio" text="" />
         </IonButtons>
         <IonTitle>电台详情</IonTitle>
         <IonButtons slot="end">
@@ -30,16 +30,12 @@
               :alt="currentStation.name"
               @error="handleImageError"
             />
-            <div class="play-all-button" @click="playFirstProgram">
-              <IonIcon :icon="play" />
-              <span>播放全部</span>
-            </div>
           </div>
-          
+
           <div class="station-info">
             <h1 class="station-name">{{ currentStation.name }}</h1>
             <p class="station-desc">{{ currentStation.description }}</p>
-            
+
             <div class="station-meta">
               <div v-if="currentStation.dj" class="dj-info">
                 <img
@@ -50,7 +46,7 @@
                 />
                 <span class="dj-name">{{ currentStation.dj.nickname }}</span>
               </div>
-              
+
               <div class="station-stats">
                 <span v-if="currentStation.subCount" class="stat-item">
                   <IonIcon :icon="peopleOutline" />
@@ -67,8 +63,14 @@
 
         <!-- 节目列表 -->
         <div v-if="currentPrograms.length > 0" class="programs-section">
-          <h2 class="section-title">节目列表</h2>
-          
+          <div class="section-header">
+            <h2 class="section-title">节目列表</h2>
+            <div class="play-all-button" @click="playFirstProgram">
+              <IonIcon :icon="play" />
+              <span>播放全部</span>
+            </div>
+          </div>
+
           <div class="programs-list">
             <div
               v-for="(program, index) in currentPrograms"
@@ -82,6 +84,7 @@
                   :src="program.picUrl"
                   :alt="program.name"
                   @error="handleImageError"
+                  @load="handleImageLoad"
                 />
               </div>
               <div class="program-info">
@@ -107,6 +110,25 @@
           <IonIcon :icon="albumsOutline" />
           <p>暂无节目</p>
         </div>
+
+        <!-- 无限滚动 -->
+        <IonInfiniteScroll
+          @ionInfinite="onInfiniteScroll"
+          threshold="100px"
+          :disabled="!hasMorePrograms"
+          v-if="programs.length > 0"
+        >
+          <IonInfiniteScrollContent
+            loading-spinner="bubbles"
+            loading-text="加载更多节目..."
+          >
+          </IonInfiniteScrollContent>
+        </IonInfiniteScroll>
+
+        <!-- 没有更多提示 -->
+        <div v-if="!hasMorePrograms && programs.length > 0" class="no-more">
+          已显示全部节目
+        </div>
       </div>
     </IonContent>
   </IonPage>
@@ -124,7 +146,9 @@ import {
   IonBackButton,
   IonButton,
   IonIcon,
-  IonSpinner
+  IonSpinner,
+  IonInfiniteScroll,
+  IonInfiniteScrollContent
 } from '@ionic/vue'
 import {
   play,
@@ -148,7 +172,12 @@ const stationId = computed(() => Number(route.params.id))
 const currentStation = computed(() => radioStore.currentStation)
 const currentPrograms = computed(() => radioStore.currentPrograms)
 const loading = computed(() => radioStore.loading)
+const loadingMorePrograms = computed(() => radioStore.loadingMorePrograms)
+const hasMorePrograms = computed(() => radioStore.hasMorePrograms)
 const isSubscribed = computed(() => radioStore.isSubscribed(stationId.value))
+
+// 为了模板中使用方便，创建别名
+const programs = currentPrograms
 
 // 方法
 const toggleSubscribe = () => {
@@ -172,7 +201,7 @@ const playProgram = async (program: RadioProgram) => {
     duration: program.duration,
     url: program.url
   }
-  
+
   await musicStore.setCurrentSong(song)
   await musicStore.setPlaylist([song], 0)
 }
@@ -200,7 +229,22 @@ const formatDate = (timestamp?: number) => {
 
 const handleImageError = (event: Event) => {
   const target = event.target as HTMLImageElement
+  console.log(`❌ [电台详情] 图片加载失败: ${target.src}`)
   target.src = '/images/album.jpg'
+}
+
+const handleImageLoad = (event: Event) => {
+  const target = event.target as HTMLImageElement
+  console.log(`✅ [电台详情] 图片加载成功: ${target.src}`)
+}
+
+// 无限滚动处理
+const onInfiniteScroll = async (ev: any) => {
+  console.log(`🔄 [电台详情] 触发无限滚动, hasMore=${hasMorePrograms.value}, loadingMore=${loadingMorePrograms.value}`)
+  if (hasMorePrograms.value && !loadingMorePrograms.value) {
+    await radioStore.loadMorePrograms(stationId.value)
+  }
+  ev.target.complete()
 }
 
 // 生命周期
@@ -259,21 +303,26 @@ onMounted(() => {
   object-fit: cover;
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .play-all-button {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--ion-color-primary);
+  background: var(--ion-color-primary);
+  color: white;
   border-radius: 20px;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.3);
 }
 
 .play-all-button:active {
@@ -347,7 +396,7 @@ onMounted(() => {
 .section-title {
   font-size: 18px;
   font-weight: bold;
-  margin: 0 0 16px 0;
+  margin: 0;
   color: var(--ion-color-step-800);
 }
 
@@ -373,16 +422,10 @@ onMounted(() => {
 }
 
 .program-index {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--ion-color-primary);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
+  width: 32px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--ion-color-medium);
   margin-right: 12px;
   flex-shrink: 0;
 }
@@ -439,16 +482,23 @@ onMounted(() => {
   font-weight: 500;
 }
 
+.no-more {
+  text-align: center;
+  padding: 20px;
+  color: var(--ion-color-step-500);
+  font-size: 14px;
+}
+
 @media (max-width: 480px) {
   .station-cover {
     width: 160px;
     height: 160px;
   }
-  
+
   .station-name {
     font-size: 20px;
   }
-  
+
   .station-stats {
     flex-direction: column;
     gap: 8px;

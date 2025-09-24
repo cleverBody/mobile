@@ -3,7 +3,7 @@
     <IonHeader>
       <IonToolbar>
         <IonButtons slot="start">
-          <IonBackButton />
+          <IonBackButton text="" />
         </IonButtons>
         <IonTitle>节目详情</IonTitle>
       </IonToolbar>
@@ -30,11 +30,11 @@
                 <IonIcon :icon="play" />
               </div>
             </div>
-            
+
             <div class="program-info">
               <h1 class="program-name">{{ currentProgram.name }}</h1>
               <p class="program-desc">{{ currentProgram.description }}</p>
-              
+
               <div class="program-meta">
                 <span class="program-duration">{{ formatDuration(currentProgram.duration) }}</span>
                 <span class="program-date">{{ formatDate(currentProgram.createTime) }}</span>
@@ -88,7 +88,7 @@ const { currentProgram, loading } = radioStore
 // 方法
 const playProgram = async () => {
   if (!currentProgram.value) return
-  
+
   // 转换为音乐格式播放
   const song = {
     id: currentProgram.value.id,
@@ -99,7 +99,7 @@ const playProgram = async () => {
     duration: currentProgram.value.duration,
     url: currentProgram.value.url
   }
-  
+
   await musicStore.setCurrentSong(song)
   await musicStore.setPlaylist([song], 0)
 }
@@ -240,11 +240,11 @@ onMounted(() => {
     width: 200px;
     height: 200px;
   }
-  
+
   .program-name {
     font-size: 20px;
   }
-  
+
   .program-meta {
     flex-direction: column;
     gap: 8px;

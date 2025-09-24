@@ -24,25 +24,44 @@ export const useRadioStore = defineStore('radio', () => {
   const currentPrograms = ref<RadioProgram[]>([])
   const currentProgram = ref<RadioProgram | null>(null)
   const loading = ref(false)
+  const loadingMorePrograms = ref(false)
+  const hasMorePrograms = ref(true)
+  const programsOffset = ref(0)
   const error = ref<string | null>(null)
 
   // 订阅的电台列表
   const subscribedStations = ref<Set<number>>(new Set())
 
+  // 初始化方法 - 确保持久化恢复后的数据类型正确
+  const initializeStore = () => {
+    console.log('🔧 [电台Store] 初始化订阅数据:', subscribedStations.value, typeof subscribedStations.value)
+    if (!(subscribedStations.value instanceof Set)) {
+      console.log('⚠️ [电台Store] 订阅数据不是Set类型，正在转换...')
+      const stations = Array.isArray(subscribedStations.value)
+        ? subscribedStations.value
+        : Object.keys(subscribedStations.value || {}).map(Number)
+      subscribedStations.value = new Set(stations)
+      console.log('✅ [电台Store] 订阅数据转换完成:', subscribedStations.value)
+    }
+  }
+
+  // 立即初始化
+  initializeStore()
+
   // 方法
-  
+
   /**
    * 加载电台首页数据
    */
   const loadHomeData = async () => {
     if (loading.value) return
-    
+
     loading.value = true
     error.value = null
-    
+
     try {
       console.log('🎵 [电台Store] 开始加载首页数据')
-      
+
       // 并行加载多个数据
       const [categoriesResult, hotResult, recommendResult, typesResult] = await Promise.allSettled([
         radioApi.getCategoryList(),
@@ -50,7 +69,7 @@ export const useRadioStore = defineStore('radio', () => {
         radioApi.getRecommend(),
         radioApi.getRecommendTypes()
       ])
-      
+
       // 处理分类数据
       if (categoriesResult.status === 'fulfilled') {
         categories.value = categoriesResult.value.categories || []
@@ -58,7 +77,7 @@ export const useRadioStore = defineStore('radio', () => {
       } else {
         console.warn('⚠️ [电台Store] 分类加载失败:', categoriesResult.reason)
       }
-      
+
       // 处理热门电台
       if (hotResult.status === 'fulfilled') {
         hotStations.value = hotResult.value.toplist || []
@@ -66,7 +85,7 @@ export const useRadioStore = defineStore('radio', () => {
       } else {
         console.warn('⚠️ [电台Store] 热门电台加载失败:', hotResult.reason)
       }
-      
+
       // 处理推荐电台
       if (recommendResult.status === 'fulfilled') {
         recommendStations.value = recommendResult.value.djRadios || []
@@ -74,14 +93,14 @@ export const useRadioStore = defineStore('radio', () => {
       } else {
         console.warn('⚠️ [电台Store] 推荐电台加载失败:', recommendResult.reason)
       }
-      
+
       // 处理分类推荐
       if (typesResult.status === 'fulfilled') {
         // 将API返回的数据格式转换为我们需要的格式
         // 检查是否有嵌套的data字段
         const apiResponse = typesResult.value
         let apiData = []
-        
+
         if (apiResponse && apiResponse.data) {
           apiData = apiResponse.data
         } else if (Array.isArray(apiResponse)) {
@@ -90,7 +109,7 @@ export const useRadioStore = defineStore('radio', () => {
           console.warn('⚠️ [电台Store] 分类推荐数据格式异常:', apiResponse)
           apiData = []
         }
-        
+
         categoryRecommends.value = apiData.map((item: any) => ({
           id: item.categoryId,
           name: item.categoryName,
@@ -100,15 +119,15 @@ export const useRadioStore = defineStore('radio', () => {
       } else {
         console.warn('⚠️ [电台Store] 分类推荐加载失败:', typesResult.reason)
       }
-      
+
       console.log('✅ [电台Store] 首页数据加载完成')
       console.log('📊 [电台Store] 数据统计:', {
         categories: categories.value.length,
-        hotStations: hotStations.value.length, 
+        hotStations: hotStations.value.length,
         recommendStations: recommendStations.value.length,
         categoryRecommends: categoryRecommends.value.length
       })
-      
+
     } catch (error) {
       console.error('❌ [电台Store] 首页数据加载失败:', error)
       error.value = '加载电台数据失败'
@@ -125,8 +144,8 @@ export const useRadioStore = defineStore('radio', () => {
     try {
       console.log(`🎵 [电台Store] 加载分类电台: ${categoryId}, limit: ${limit}, offset: ${offset}`)
       const result = await radioApi.getCategoryHot(categoryId, limit, offset)
-      console.log(`✅ [电台Store] 分类电台加载完成: ${result.djRadios?.length || 0}个`)
-      return result.djRadios || []
+      console.log(`✅ [电台Store] 分类电台加载完成: ${result.djRadios?.length || 0}个, hasMore: ${result.hasMore}`)
+      return result
     } catch (error) {
       console.error('❌ [电台Store] 分类电台加载失败:', error)
       showToast('加载分类电台失败', 'danger')
@@ -139,16 +158,21 @@ export const useRadioStore = defineStore('radio', () => {
    */
   const loadStationDetail = async (stationId: number) => {
     loading.value = true
-    
+
     try {
       console.log(`🎵 [电台Store] 加载电台详情: ${stationId}`)
-      
+
+      // 重置节目分页状态
+      programsOffset.value = 0
+      hasMorePrograms.value = true
+      currentPrograms.value = []
+
       // 并行加载电台详情和节目列表
       const [detailResult, programsResult] = await Promise.allSettled([
         radioApi.getDetail(stationId),
-        radioApi.getPrograms(stationId, 50)
+        radioApi.getPrograms(stationId, 50, 0)
       ])
-      
+
       // 处理电台详情
       if (detailResult.status === 'fulfilled') {
         // 检查响应数据结构，可能有双层嵌套
@@ -165,13 +189,13 @@ export const useRadioStore = defineStore('radio', () => {
         console.warn('⚠️ [电台Store] 电台详情加载失败:', detailResult.reason)
         throw new Error('电台详情加载失败')
       }
-      
+
       // 处理节目列表
       if (programsResult.status === 'fulfilled') {
         // 检查响应数据结构，可能有嵌套
         const response = programsResult.value
         let programs = []
-        
+
         if (response && response.programs) {
           programs = response.programs
         } else if (response && response.data && response.data.programs) {
@@ -179,21 +203,71 @@ export const useRadioStore = defineStore('radio', () => {
         } else if (Array.isArray(response)) {
           programs = response
         }
-        
+
         // 格式化节目数据
         currentPrograms.value = programs.map((program: any) => formatRadioProgram(program))
-        console.log(`✅ [电台Store] 节目列表加载完成: ${currentPrograms.value.length}个`)
+        programsOffset.value = 50
+        // 使用 API 返回的 more 字段
+        hasMorePrograms.value = response.more === true || response.data?.more === true
+        console.log(`✅ [电台Store] 节目列表加载完成: ${currentPrograms.value.length}个, API more: ${response.more || response.data?.more}, hasMore: ${hasMorePrograms.value}`)
+
+        // 调试：检查第一个节目的封面图
+        if (currentPrograms.value.length > 0) {
+          const firstProgram = currentPrograms.value[0]
+          console.log(`🖼️ [电台Store] 第一个节目封面: ${firstProgram.name} -> ${firstProgram.picUrl}`)
+        }
       } else {
         console.warn('⚠️ [电台Store] 节目列表加载失败:', programsResult.reason)
         currentPrograms.value = []
+        hasMorePrograms.value = false
       }
-      
+
     } catch (error) {
       console.error('❌ [电台Store] 电台详情加载失败:', error)
       error.value = '加载电台详情失败'
       showToast('加载电台详情失败', 'danger')
     } finally {
       loading.value = false
+    }
+  }
+
+  /**
+   * 加载更多节目
+   */
+  const loadMorePrograms = async (stationId: number) => {
+    if (loadingMorePrograms.value || !hasMorePrograms.value) return
+
+    loadingMorePrograms.value = true
+
+    try {
+      console.log(`🎵 [电台Store] 加载更多节目: ${stationId}, offset: ${programsOffset.value}`)
+      const result = await radioApi.getPrograms(stationId, 50, programsOffset.value)
+
+      let programs = []
+      if (result && result.programs) {
+        programs = result.programs
+      } else if (result && result.data && result.data.programs) {
+        programs = result.data.programs
+      } else if (Array.isArray(result)) {
+        programs = result
+      }
+
+      // 格式化并追加节目数据
+      const formattedPrograms = programs.map((program: any) => formatRadioProgram(program))
+      currentPrograms.value = [...currentPrograms.value, ...formattedPrograms]
+
+      // 更新分页状态
+      programsOffset.value += 50
+      // 使用 API 返回的 more 字段
+      hasMorePrograms.value = result.more === true || result.data?.more === true
+
+      console.log(`✅ [电台Store] 更多节目加载完成: +${formattedPrograms.length}个, 总计: ${currentPrograms.value.length}个, API more: ${result.more || result.data?.more}, hasMore: ${hasMorePrograms.value}`)
+
+    } catch (error) {
+      console.error('❌ [电台Store] 加载更多节目失败:', error)
+      showToast('加载更多节目失败', 'danger')
+    } finally {
+      loadingMorePrograms.value = false
     }
   }
 
@@ -219,13 +293,21 @@ export const useRadioStore = defineStore('radio', () => {
    */
   const toggleSubscribe = async (stationId: number) => {
     try {
+      // 确保 subscribedStations 是 Set 对象
+      if (!(subscribedStations.value instanceof Set)) {
+        const stations = Array.isArray(subscribedStations.value)
+          ? subscribedStations.value
+          : Object.keys(subscribedStations.value || {}).map(Number)
+        subscribedStations.value = new Set(stations)
+      }
+
       const isSubscribed = subscribedStations.value.has(stationId)
       const action = isSubscribed ? 0 : 1
-      
+
       console.log(`🎵 [电台Store] ${isSubscribed ? '取消订阅' : '订阅'}电台: ${stationId}`)
-      
+
       await radioApi.subscribe(stationId, action)
-      
+
       if (isSubscribed) {
         subscribedStations.value.delete(stationId)
         showToast('取消订阅成功', 'success')
@@ -233,9 +315,9 @@ export const useRadioStore = defineStore('radio', () => {
         subscribedStations.value.add(stationId)
         showToast('订阅成功', 'success')
       }
-      
+
       console.log(`✅ [电台Store] ${isSubscribed ? '取消订阅' : '订阅'}成功`)
-      
+
     } catch (error) {
       console.error('❌ [电台Store] 订阅操作失败:', error)
       showToast('订阅操作失败', 'danger')
@@ -246,7 +328,20 @@ export const useRadioStore = defineStore('radio', () => {
    * 检查是否已订阅
    */
   const isSubscribed = (stationId: number) => {
-    return subscribedStations.value.has(stationId)
+    console.log('🔍 [电台Store] 检查订阅状态:', stationId, subscribedStations.value, typeof subscribedStations.value)
+    // 确保 subscribedStations 是 Set 对象
+    if (!(subscribedStations.value instanceof Set)) {
+      console.log('⚠️ [电台Store] isSubscribed: 订阅数据不是Set类型，正在转换...')
+      // 如果不是 Set，转换为 Set（处理持久化恢复的情况）
+      const stations = Array.isArray(subscribedStations.value)
+        ? subscribedStations.value
+        : Object.keys(subscribedStations.value || {}).map(Number)
+      subscribedStations.value = new Set(stations)
+      console.log('✅ [电台Store] isSubscribed: 订阅数据转换完成:', subscribedStations.value)
+    }
+    const result = subscribedStations.value.has(stationId)
+    console.log('📊 [电台Store] 订阅检查结果:', stationId, result)
+    return result
   }
 
   /**
@@ -256,6 +351,9 @@ export const useRadioStore = defineStore('radio', () => {
     currentStation.value = null
     currentPrograms.value = []
     currentProgram.value = null
+    programsOffset.value = 0
+    hasMorePrograms.value = true
+    loadingMorePrograms.value = false
     error.value = null
   }
 
@@ -276,13 +374,18 @@ export const useRadioStore = defineStore('radio', () => {
     currentPrograms,
     currentProgram,
     loading,
+    loadingMorePrograms,
+    hasMorePrograms,
+    programsOffset,
     error,
     subscribedStations,
 
     // 方法
+    initializeStore,
     loadHomeData,
     loadCategoryStations,
     loadStationDetail,
+    loadMorePrograms,
     loadProgramDetail,
     toggleSubscribe,
     isSubscribed,
