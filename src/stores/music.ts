@@ -59,7 +59,7 @@ const showToast = async (message: string, color: 'success' | 'warning' | 'danger
 export const useMusicStore = defineStore('music', () => {
   // 获取设置store
   const settingsStore = useSettingsStore()
-  
+
   // 状态
   const currentSong = ref<Song | null>(null)
   const playlist = ref<Song[]>([])
@@ -73,7 +73,7 @@ export const useMusicStore = defineStore('music', () => {
   const volume = ref(0.8)
   const isMuted = ref(false)
   const playMode = ref<'order' | 'random' | 'repeat'>('order')
-  
+
   // 多源播放状态（新增）
   const currentAudioSource = ref<string>('') // 当前音源名称
   const isLoadingAlternativeSource = ref(false) // 是否正在加载备用音源
@@ -106,7 +106,7 @@ export const useMusicStore = defineStore('music', () => {
   const loadAndPlaySong = async (song: Song) => {
     try {
       console.log('🎵 开始加载歌曲:', song.name)
-      
+
       // 重置多源状态
       currentAudioSource.value = ''
       isLoadingAlternativeSource.value = false
@@ -127,7 +127,7 @@ export const useMusicStore = defineStore('music', () => {
       // 使用多源API获取播放链接
       console.log('🎵 使用多源API获取播放链接...')
       let songUrlResult = null
-      
+
       try {
         songUrlResult = await musicApi.getMultiSourceSongUrl(song)
       } catch (error) {
@@ -136,7 +136,7 @@ export const useMusicStore = defineStore('music', () => {
 
       if (!songUrlResult) {
         console.error('❌ 无法获取歌曲播放链接')
-        
+
         // 自动跳到下一首
         if (hasNext.value) {
           console.log('自动跳到下一首歌曲')
@@ -152,9 +152,9 @@ export const useMusicStore = defineStore('music', () => {
 
       const { url: songUrl, source } = songUrlResult
       currentAudioSource.value = source
-      
+
       console.log('✅ 获取到播放URL:', songUrl, '音源:', source)
-      
+
       // 如果使用的是备用音源，显示提示
       if (source !== '网易云音乐') {
         isLoadingAlternativeSource.value = true
@@ -188,13 +188,24 @@ export const useMusicStore = defineStore('music', () => {
         },
         onend: () => {
           isPlaying.value = false
-          nextSong()
           console.log('⏹️ 播放结束')
+
+          // 根据播放模式处理播放结束
+          if (playMode.value === 'repeat') {
+            // 单曲循环：重新播放当前歌曲
+            console.log('🔄 单曲循环，重新播放')
+            setTimeout(() => {
+              play()
+            }, 100)
+          } else {
+            // 其他模式：播放下一首
+            nextSong()
+          }
         },
         onloaderror: (id, error) => {
           console.error('❌ 音频加载错误:', error)
           showToast('音频加载失败，尝试备用音源', 'warning')
-          
+
           // 如果是网易云音源失败，尝试其他音源
           if (source === '网易云音乐') {
             loadAlternativeSource(song)
@@ -203,7 +214,7 @@ export const useMusicStore = defineStore('music', () => {
         onplayerror: (id, error) => {
           console.error('❌ 音频播放错误:', error)
           showToast('播放失败，尝试备用音源', 'warning')
-          
+
           // 尝试备用音源
           loadAlternativeSource(song)
         }
@@ -231,24 +242,24 @@ export const useMusicStore = defineStore('music', () => {
       console.log('⚠️ 已在加载备用音源，跳过')
       return
     }
-    
+
     isLoadingAlternativeSource.value = true
     console.log('🔄 尝试加载备用音源:', song.name)
-    
+
     try {
       // 停止当前实例
       if (howl) {
         howl.stop()
         howl.unload()
       }
-      
+
       // 强制使用多源服务（跳过网易云）
       const fallbackResult = await multiSourceMusicService.getPlayableUrl(song)
-      
+
       if (!fallbackResult) {
         console.error('❌ 备用音源也无法获取')
         showToast('所有音源都无法播放', 'danger')
-        
+
         // 自动跳到下一首
         if (hasNext.value) {
           setTimeout(() => {
@@ -257,13 +268,13 @@ export const useMusicStore = defineStore('music', () => {
         }
         return
       }
-      
+
       const { url: fallbackUrl, source: fallbackSource } = fallbackResult
       currentAudioSource.value = fallbackSource
-      
+
       console.log('✅ 获取到备用播放URL:', fallbackUrl, '音源:', fallbackSource)
       showToast(`切换到 ${fallbackSource}`, 'success')
-      
+
       // 创建新的Howl实例
       howl = new Howl({
         src: [fallbackUrl],
@@ -285,17 +296,29 @@ export const useMusicStore = defineStore('music', () => {
         },
         onend: () => {
           isPlaying.value = false
-          nextSong()
+          console.log('⏹️ 备用音源播放结束')
+
+          // 根据播放模式处理播放结束
+          if (playMode.value === 'repeat') {
+            // 单曲循环：重新播放当前歌曲
+            console.log('🔄 单曲循环，重新播放')
+            setTimeout(() => {
+              play()
+            }, 100)
+          } else {
+            // 其他模式：播放下一首
+            nextSong()
+          }
         },
         onloaderror: () => {
           console.error('❌ 备用音源也加载失败')
           showToast('备用音源加载失败', 'danger')
         }
       })
-      
+
       // 开始播放备用音源
       howl.play()
-      
+
     } catch (error) {
       console.error('❌ 备用音源加载异常:', error)
       showToast('备用音源加载异常', 'danger')
@@ -407,10 +430,22 @@ export const useMusicStore = defineStore('music', () => {
   }
 
   // 播放模式切换
-  const togglePlayMode = () => {
+  const togglePlayMode = async () => {
     const modes: Array<'order' | 'random' | 'repeat'> = ['order', 'random', 'repeat']
     const currentIndex = modes.indexOf(playMode.value)
     playMode.value = modes[(currentIndex + 1) % modes.length]
+
+    // 显示toast提示
+    const modeNames = {
+      'order': '顺序播放',
+      'random': '随机播放',
+      'repeat': '单曲循环'
+    }
+
+    // 使用自定义提示显示播放模式
+    showPlayModeToast(modeNames[playMode.value])
+
+    console.log('切换播放模式:', modeNames[playMode.value])
   }
 
   // 开始更新计时器
@@ -480,7 +515,7 @@ export const useMusicStore = defineStore('music', () => {
     volume,
     isMuted,
     playMode,
-    
+
     // 多源播放状态
     currentAudioSource,
     isLoadingAlternativeSource,
@@ -514,3 +549,52 @@ export const useMusicStore = defineStore('music', () => {
     paths: ['likedSongs', 'currentSong', 'volume', 'playMode']
   }
 })
+
+// 自定义播放模式提示
+const showPlayModeToast = (modeText: string) => {
+  // 移除已存在的提示
+  const existingToast = document.querySelector('.custom-play-mode-toast')
+  if (existingToast) {
+    existingToast.remove()
+  }
+
+  // 创建提示元素
+  const toast = document.createElement('div')
+  toast.className = 'custom-play-mode-toast'
+  toast.textContent = `播放模式: ${modeText}`
+
+  // 设置样式
+  Object.assign(toast.style, {
+    position: 'fixed',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    marginTop: '120px', // 向下偏移更多，到进度条下方
+    color: '#99CCFF', // 更淡的蓝色
+    fontSize: '12px',
+    fontWeight: '600',
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.2)',
+    zIndex: '10000',
+    pointerEvents: 'none',
+    opacity: '0',
+    transition: 'opacity 0.3s ease'
+  })
+
+  // 添加到页面
+  document.body.appendChild(toast)
+
+  // 显示动画
+  requestAnimationFrame(() => {
+    toast.style.opacity = '1'
+  })
+
+  // 1.5秒后移除
+  setTimeout(() => {
+    toast.style.opacity = '0'
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.parentNode.removeChild(toast)
+      }
+    }, 300)
+  }, 1500)
+}

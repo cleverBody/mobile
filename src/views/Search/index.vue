@@ -1,9 +1,12 @@
 <template>
   <IonPage>
-    <IonContent :fullscreen="true">
+    <IonContent :fullscreen="true" :scroll-events="true" @ionScroll="handleScroll">
       <div class="search-page">
         <!-- 自定义搜索头部 -->
-        <div class="search-header">
+        <div
+          class="search-header"
+          :class="{ 'search-header-hidden': isHeaderHidden }"
+        >
           <div class="search-bar-container">
             <BackButton />
 
@@ -16,8 +19,8 @@
                 placeholder="搜索歌曲、歌手、专辑"
                 class="search-input"
                 @input="handleSearch"
-                @focus="isSearchFocused = true"
-                @blur="isSearchFocused = false"
+                @focus="handleSearchFocus"
+                @blur="handleSearchBlur"
                 @keyup.enter="handleSearch"
               />
               <IonButton
@@ -275,6 +278,11 @@ const activeTab = ref('songs')
 const searching = ref(false)
 const isSearchFocused = ref(false)
 const searchInput = ref<HTMLInputElement>()
+
+// 滚动相关状态
+const isHeaderHidden = ref(false)
+const lastScrollTop = ref(0)
+const scrollThreshold = 50 // 滚动阈值
 let searchTimeout: NodeJS.Timeout | null = null
 
 // 计算属性
@@ -334,6 +342,48 @@ const removeHistoryItem = (index: number) => {
   searchStore.removeHistoryItem(index)
 }
 
+// 滚动处理函数
+const handleScroll = (event: CustomEvent) => {
+  const scrollTop = event.detail.scrollTop
+
+  // 如果搜索框正在聚焦，不隐藏头部
+  if (isSearchFocused.value) {
+    return
+  }
+
+  // 如果滚动距离小于阈值，显示头部
+  if (scrollTop < scrollThreshold) {
+    isHeaderHidden.value = false
+    lastScrollTop.value = scrollTop
+    return
+  }
+
+  // 判断滚动方向
+  const scrollDirection = scrollTop > lastScrollTop.value ? 'down' : 'up'
+
+  // 向下滚动且超过阈值时隐藏头部
+  if (scrollDirection === 'down' && scrollTop > scrollThreshold) {
+    isHeaderHidden.value = true
+  }
+  // 向上滚动时显示头部
+  else if (scrollDirection === 'up') {
+    isHeaderHidden.value = false
+  }
+
+  lastScrollTop.value = scrollTop
+}
+
+// 搜索框焦点处理
+const handleSearchFocus = () => {
+  isSearchFocused.value = true
+  // 搜索框聚焦时显示头部
+  isHeaderHidden.value = false
+}
+
+const handleSearchBlur = () => {
+  isSearchFocused.value = false
+}
+
 const handleTabChange = (event: CustomEvent) => {
   activeTab.value = event.detail.value
 }
@@ -384,6 +434,10 @@ const handleImageError = (event: Event) => {
 // 生命周期
 onMounted(() => {
   searchStore.loadSuggestions()
+
+  // 初始化滚动状态
+  isHeaderHidden.value = false
+  lastScrollTop.value = 0
 })
 </script>
 
@@ -402,6 +456,12 @@ onMounted(() => {
   z-index: 10;
   padding: calc(var(--ion-safe-area-top) + 12px) 16px 12px;
   box-shadow: 0 2px 8px var(--s-shadow-light);
+  transform: translateY(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-header-hidden {
+  transform: translateY(-100%) !important;
 }
 
 .search-bar-container {

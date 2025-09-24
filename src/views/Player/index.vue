@@ -87,7 +87,11 @@
 
           <!-- 播放控制区域 - 进度条下方 -->
           <div class="player-controls">
-            <button class="control-btn secondary" @click="togglePlayMode">
+            <button
+              class="control-btn secondary"
+              @click="togglePlayMode"
+              :title="getPlayModeText()"
+            >
               <IonIcon :icon="getPlayModeIcon()" />
             </button>
 
@@ -144,6 +148,7 @@ import {
   playSkipForwardOutline,
   shuffleOutline,
   repeatOutline,
+  reorderTwoOutline,
   volumeHighOutline,
   volumeMediumOutline,
   volumeLowOutline,
@@ -235,11 +240,24 @@ const toggleVolume = () => {
 const getPlayModeIcon = () => {
   switch (musicStore.playMode) {
     case 'random':
-      return shuffleOutline
+      return shuffleOutline // 随机播放
     case 'repeat':
-      return repeatOutline
+      return repeatOutline // 单曲循环
+    case 'order':
     default:
-      return listOutline
+      return reorderTwoOutline // 顺序播放
+  }
+}
+
+const getPlayModeText = () => {
+  switch (musicStore.playMode) {
+    case 'random':
+      return '随机播放'
+    case 'repeat':
+      return '单曲循环'
+    case 'order':
+    default:
+      return '顺序播放'
   }
 }
 
@@ -396,7 +414,7 @@ const formatTime = (time: number) => {
   border-radius: 50%;
   overflow: hidden;
   position: relative;
-  box-shadow: 
+  box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.4),
     0 0 0 8px rgba(255, 255, 255, 0.05),
     0 0 0 1px rgba(255, 255, 255, 0.1);
@@ -409,7 +427,7 @@ const formatTime = (time: number) => {
 
 .album-cover:hover {
   transform: scale(1.02);
-  box-shadow: 
+  box-shadow:
     0 25px 80px rgba(0, 0, 0, 0.5),
     0 0 0 8px rgba(255, 255, 255, 0.08),
     0 0 0 1px rgba(255, 255, 255, 0.15);
@@ -533,14 +551,14 @@ const formatTime = (time: number) => {
   background: var(--s-primary-light);
   color: var(--s-text-primary);
   font-size: 28px;
-  box-shadow: 
+  box-shadow:
     0 6px 24px var(--s-shadow),
     0 0 0 3px rgba(255, 255, 255, 0.1);
 }
 
 .control-btn.primary:hover {
   transform: scale(1.05);
-  box-shadow: 
+  box-shadow:
     0 8px 32px var(--s-shadow),
     0 0 0 3px rgba(255, 255, 255, 0.15);
 }

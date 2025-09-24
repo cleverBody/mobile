@@ -65,6 +65,39 @@
   --ion-color-light-tint: #f5f6f9;
 }
 
+/* 播放模式Toast样式 */
+ion-toast.play-mode-toast {
+  --background: transparent !important;
+  --color: #007AFF !important;
+  --border-radius: 0 !important;
+  --box-shadow: none !important;
+  --border: none !important;
+  --min-height: auto !important;
+  --font-size: 12px !important;
+  --font-weight: 600 !important;
+}
+
+ion-toast.play-mode-toast .toast-wrapper,
+ion-toast.play-mode-toast .toast-container {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 4px 8px !important;
+  margin: 0 !important;
+  outline: none !important;
+  backdrop-filter: none !important;
+}
+
+ion-toast.play-mode-toast .toast-message {
+  color: #007AFF !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+  background: transparent !important;
+  border: none !important;
+}
+
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
   :root {
