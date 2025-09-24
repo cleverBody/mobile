@@ -153,6 +153,66 @@ export const useRadioStore = defineStore('radio', () => {
     }
   }
 
+  // 热门电台完整数据缓存
+  let allHotStations: any[] = []
+
+  /**
+   * 获取热门电台（分页）
+   */
+  const loadHotStations = async (limit = 50, offset = 0) => {
+    try {
+      console.log(`🎵 [电台Store] 加载热门电台: limit: ${limit}, offset: ${offset}`)
+
+      // 如果是第一次加载或缓存为空，获取所有数据
+      if (offset === 0 || allHotStations.length === 0) {
+        const result = await radioApi.getToplist('hot', 100, 0) // 获取足够多的数据
+        allHotStations = result.toplist || []
+        console.log(`✅ [电台Store] 热门电台全量加载完成: ${allHotStations.length}个`)
+      }
+
+      // 客户端分页
+      const start = offset
+      const end = offset + limit
+      const paginatedData = allHotStations.slice(start, end)
+      const hasMore = end < allHotStations.length
+
+      console.log(`✅ [电台Store] 热门电台分页完成: 返回${paginatedData.length}个 (${start}-${end-1}), 总计${allHotStations.length}个, hasMore: ${hasMore}`)
+      return {
+        djRadios: paginatedData,
+        hasMore: hasMore
+      }
+    } catch (error) {
+      console.error('❌ [电台Store] 加载热门电台失败:', error)
+      throw error
+    }
+  }
+
+  /**
+   * 获取推荐电台（使用个性推荐）
+   */
+  const loadRecommendStations = async (limit = 50, offset = 0) => {
+    try {
+      console.log(`🎵 [电台Store] 加载推荐电台: limit: ${limit}, offset: ${offset}`)
+      // 推荐电台API不支持分页，使用个性推荐API
+      const result = await radioApi.getPersonalized()
+      const djRadios = result.djRadios || []
+
+      // 模拟分页
+      const start = offset
+      const end = offset + limit
+      const paginatedData = djRadios.slice(start, end)
+
+      console.log(`✅ [电台Store] 推荐电台加载完成: ${paginatedData.length}个`)
+      return {
+        djRadios: paginatedData,
+        hasMore: end < djRadios.length
+      }
+    } catch (error) {
+      console.error('❌ [电台Store] 加载推荐电台失败:', error)
+      throw error
+    }
+  }
+
   /**
    * 获取电台详情和节目列表
    */
@@ -384,6 +444,8 @@ export const useRadioStore = defineStore('radio', () => {
     initializeStore,
     loadHomeData,
     loadCategoryStations,
+    loadHotStations,
+    loadRecommendStations,
     loadStationDetail,
     loadMorePrograms,
     loadProgramDetail,

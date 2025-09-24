@@ -26,8 +26,12 @@
         <section v-if="radioStore.categories.length > 0" class="content-section">
           <div class="section-header">
             <h2 class="section-title">电台分类</h2>
+            <IonButton v-if="radioStore.categories.length > 8" fill="clear" size="small" @click="toggleCategories">
+              {{ showAllCategories ? '收起' : '更多' }}
+              <IonIcon :icon="showAllCategories ? chevronUpOutline : chevronForwardOutline" />
+            </IonButton>
           </div>
-          
+
           <div class="category-grid">
             <div
               v-for="category in displayCategories"
@@ -40,14 +44,6 @@
               </div>
               <span class="category-name">{{ category.name }}</span>
             </div>
-            
-            <!-- 展开/收起按钮 -->
-            <div v-if="radioStore.categories.length > 8" class="category-card expand-card" @click="toggleCategories">
-              <div class="category-icon">
-                <IonIcon :icon="showAllCategories ? chevronUpOutline : chevronDownOutline" />
-              </div>
-              <span class="category-name">{{ showAllCategories ? '收起' : '更多' }}</span>
-            </div>
           </div>
         </section>
 
@@ -55,7 +51,7 @@
         <section v-if="radioStore.hotStations.length > 0" class="content-section">
           <div class="section-header">
             <h2 class="section-title">热门推荐</h2>
-            <IonButton fill="clear" size="small">
+            <IonButton fill="clear" size="small" @click="goToHotStations">
               更多
               <IonIcon :icon="chevronForwardOutline" />
             </IonButton>
@@ -100,6 +96,10 @@
         <section v-if="radioStore.recommendStations.length > 0" class="content-section">
           <div class="section-header">
             <h2 class="section-title">为你推荐</h2>
+            <IonButton fill="clear" size="small" @click="goToRecommendStations">
+              更多
+              <IonIcon :icon="chevronForwardOutline" />
+            </IonButton>
           </div>
 
           <div class="recommend-list">
@@ -234,6 +234,22 @@ const goToCategory = (categoryId: number, categoryName: string) => {
 
 const goToStation = (stationId: number) => {
   router.push(`/radio/station/${stationId}`)
+}
+
+const goToHotStations = () => {
+  // 跳转到热门推荐页面，使用一个通用的热门分类ID
+  router.push({
+    path: '/radio/category/0',
+    query: { name: '热门推荐', type: 'hot' }
+  })
+}
+
+const goToRecommendStations = () => {
+  // 跳转到推荐电台页面
+  router.push({
+    path: '/radio/category/0',
+    query: { name: '为你推荐', type: 'recommend' }
+  })
 }
 
 const formatCount = (count?: number) => {
@@ -631,11 +647,11 @@ onMounted(() => {
   .station-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .category-grid {
     grid-template-columns: repeat(3, 1fr);
   }
-  
+
   .horizontal-card {
     width: 100px;
   }

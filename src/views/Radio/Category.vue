@@ -125,6 +125,7 @@ const limit = 20
 // 计算属性
 const categoryId = computed(() => Number(route.params.id))
 const categoryName = computed(() => route.query.name as string)
+const categoryType = computed(() => route.query.type as string)
 
 // 方法
 const loadStations = async (reset = true) => {
@@ -140,8 +141,26 @@ const loadStations = async (reset = true) => {
   }
 
   try {
-    const result = await radioStore.loadCategoryStations(categoryId.value, limit, offset.value)
-    const djRadios = result.djRadios || []
+    let djRadios: any[] = []
+    let hasMoreData = false
+
+    // 根据类型加载不同的数据
+    if (categoryType.value === 'hot') {
+      // 热门推荐 - 使用分页API
+      const result = await radioStore.loadHotStations(limit, offset.value)
+      djRadios = result.djRadios || []
+      hasMoreData = result.hasMore === true
+    } else if (categoryType.value === 'recommend') {
+      // 为你推荐 - 使用分页API
+      const result = await radioStore.loadRecommendStations(limit, offset.value)
+      djRadios = result.djRadios || []
+      hasMoreData = result.hasMore === true
+    } else {
+      // 普通分类 - 使用 API 加载
+      const result = await radioStore.loadCategoryStations(categoryId.value, limit, offset.value)
+      djRadios = result.djRadios || []
+      hasMoreData = result.hasMore === true
+    }
 
     if (reset) {
       stations.value = djRadios
@@ -151,9 +170,9 @@ const loadStations = async (reset = true) => {
 
     // 更新分页状态
     offset.value += limit
-    hasMore.value = result.hasMore === true
+    hasMore.value = hasMoreData
 
-    console.log(`📊 [分类页面] 加载结果: 返回${djRadios.length}条, API hasMore=${result.hasMore}, 本地hasMore=${hasMore.value}, offset=${offset.value}, 总数=${stations.value.length}`)
+    console.log(`📊 [分类页面] 加载结果: 类型=${categoryType.value}, 返回${djRadios.length}条, hasMore=${hasMore.value}, offset=${offset.value}, 总数=${stations.value.length}`)
 
   } catch (error) {
     console.error('加载分类电台失败:', error)
