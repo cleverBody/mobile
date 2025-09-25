@@ -3,11 +3,10 @@ import axios from 'axios'
 
 // 获取API基础URL
 const getBaseURL = () => {
-  // 更可靠的APK环境检测
+  // 修复环境检测逻辑
   const isAPK = window.location.protocol === 'capacitor:' ||
                 window.location.protocol === 'file:' ||
-                !import.meta.env.DEV ||
-                (typeof window !== 'undefined' && (window as any).Capacitor)
+                (typeof window !== 'undefined' && (window as any).Capacitor && !import.meta.env.DEV)
 
   // APK环境直接使用远程服务器
   if (isAPK) {

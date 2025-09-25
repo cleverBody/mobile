@@ -27,11 +27,11 @@
               <span class="action-label">每日推荐</span>
             </div>
 
-            <div class="action-item" @click="startPersonalFM">
-              <div class="action-icon personal-fm">
-                <IonIcon :icon="radioOutline" class="main-icon" />
+            <div class="action-item" @click="goToLocalMusic">
+              <div class="action-icon local-music">
+                <IonIcon :icon="musicalNotesOutline" class="main-icon" />
               </div>
-              <span class="action-label">私人FM</span>
+              <span class="action-label">本地音乐</span>
             </div>
 
             <div class="action-item" @click="goToLiked">
@@ -176,7 +176,9 @@ import {
   sparkles,
   sparklesOutline,
   musicalNote,
-  musicalNoteOutline
+  musicalNoteOutline,
+  musicalNotes,
+  musicalNotesOutline
 } from 'ionicons/icons'
 import { useRouter } from 'vue-router'
 import { useHomeStore } from '@/stores/home'
@@ -207,9 +209,8 @@ const goToDailyRecommend = () => {
   router.push('/daily-recommend')
 }
 
-const startPersonalFM = () => {
-  // TODO: 启动私人FM
-  console.log('启动私人FM')
+const goToLocalMusic = () => {
+  router.push('/local-music')
 }
 
 const goToLiked = () => {
@@ -381,7 +382,7 @@ onMounted(async () => {
   background: linear-gradient(135deg, #a8e6cf 0%, #88d8a3 100%);
 }
 
-.personal-fm {
+.local-music {
   background: linear-gradient(135deg, #85c1e9 0%, #5dade2 100%);
 }
 

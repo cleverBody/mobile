@@ -117,108 +117,210 @@ export const useMusicStore = defineStore('music', () => {
         howl.unload()
       }
 
-      // 检测移动端环境
+      let songUrl = ''
+      let source = ''
+
+      // 检测移动端环境（提前定义，避免作用域问题）
       const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                       window.location.protocol === 'capacitor:' ||
                       (typeof window !== 'undefined' && (window as any).Capacitor)
 
-      console.log('🎵 移动端检测:', isMobile, 'protocol:', window.location.protocol)
+      // 检查是否为本地音乐
+      if ((song as any).isLocal && (song as any).localFilePath) {
+        console.log('🎵 检测到本地音乐，获取本地文件URL')
 
-      // 使用多源API获取播放链接
-      console.log('🎵 使用多源API获取播放链接...')
-      let songUrlResult = null
+        // 导入文件管理器
+        const { LocalMusicFileManager } = await import('@/utils/fileManager')
 
-      try {
-        songUrlResult = await musicApi.getMultiSourceSongUrl(song)
-      } catch (error) {
-        console.error('❌ 多源API获取失败:', error)
-      }
+        try {
+          // 从文件ID获取blob URL
+          const fileId = (song as any).localFilePath
+          songUrl = await LocalMusicFileManager.getLocalFileUrl(fileId)
+          source = '本地文件'
+          currentAudioSource.value = '本地文件'
 
-      if (!songUrlResult) {
-        console.error('❌ 无法获取歌曲播放链接')
-
-        // 自动跳到下一首
-        if (hasNext.value) {
-          console.log('自动跳到下一首歌曲')
-          showToast('该歌曲暂无音源，跳至下一首', 'warning')
-          setTimeout(() => {
-            nextSong()
-          }, 1000)
-        } else {
-          showToast('该歌曲暂无音源', 'warning')
+          console.log('🎵 本地文件URL获取成功:', songUrl.substring(0, 50) + '...')
+        } catch (error) {
+          console.error('❌ 获取本地文件URL失败:', error)
+          showToast('本地文件读取失败', 'warning')
+          return
         }
-        return
+      } else {
+        console.log('🎵 移动端检测:', isMobile, 'protocol:', window.location.protocol)
+
+        // 使用多源API获取播放链接
+        console.log('🎵 使用多源API获取播放链接...')
+        let songUrlResult = null
+
+        try {
+          songUrlResult = await musicApi.getMultiSourceSongUrl(song)
+        } catch (error) {
+          console.error('❌ 多源API获取失败:', error)
+        }
+
+        if (!songUrlResult) {
+          console.error('❌ 无法获取歌曲播放链接')
+
+          // 自动跳到下一首
+          if (hasNext.value) {
+            console.log('自动跳到下一首歌曲')
+            showToast('该歌曲暂无音源，跳至下一首', 'warning')
+            setTimeout(() => {
+              nextSong()
+            }, 1000)
+          } else {
+            showToast('该歌曲暂无音源', 'warning')
+          }
+          return
+        }
+
+        const urlResult = songUrlResult
+        songUrl = urlResult.url
+        source = urlResult.source
+        currentAudioSource.value = source
+
+        console.log('✅ 获取到播放URL:', songUrl, '音源:', source)
+
+        // 如果使用的是备用音源，显示提示
+        if (source !== '网易云音乐') {
+          isLoadingAlternativeSource.value = true
+          showToast(`正在使用 ${source} 播放`, 'success')
+          setTimeout(() => {
+            isLoadingAlternativeSource.value = false
+          }, 3000)
+        }
       }
 
-      const { url: songUrl, source } = songUrlResult
-      currentAudioSource.value = source
-
-      console.log('✅ 获取到播放URL:', songUrl, '音源:', source)
-
-      // 如果使用的是备用音源，显示提示
-      if (source !== '网易云音乐') {
-        isLoadingAlternativeSource.value = true
-        showToast(`正在使用 ${source} 播放`, 'success')
-        setTimeout(() => {
-          isLoadingAlternativeSource.value = false
-        }, 3000)
+      // 验证URL
+      if (!songUrl) {
+        console.error('❌ 歌曲URL为空')
+        showToast('播放链接无效', 'warning')
+        return
       }
 
       // 创建新的Howl实例
       console.log('🎵 创建Howl实例...')
-      howl = new Howl({
+
+      // 为本地音乐配置特殊参数
+      const howlConfig: any = {
         src: [songUrl],
-        html5: false,
         volume: volume.value,
         preload: isMobile ? 'metadata' : true,
-        onload: () => {
-          duration.value = howl?.duration() || 0
-          console.log('✅ 音频加载完成，时长:', duration.value)
-          showToast(`音频加载完成: ${song.name}`, 'success')
-        },
-        onplay: () => {
-          isPlaying.value = true
-          startUpdateTimer()
-          console.log('✅ 开始播放')
-        },
-        onpause: () => {
-          isPlaying.value = false
-          stopUpdateTimer()
-          console.log('⏸️ 暂停播放')
-        },
-        onend: () => {
-          isPlaying.value = false
-          console.log('⏹️ 播放结束')
+      }
 
-          // 根据播放模式处理播放结束
-          if (playMode.value === 'repeat') {
-            // 单曲循环：重新播放当前歌曲
-            console.log('🔄 单曲循环，重新播放')
-            setTimeout(() => {
-              play()
-            }, 100)
-          } else {
-            // 其他模式：播放下一首
-            nextSong()
+      // 本地音乐需要特殊处理
+      if ((song as any).isLocal) {
+        howlConfig.html5 = true // 本地文件必须使用HTML5模式
+
+        console.log('🎵 本地音乐调试信息:')
+        console.log('  - song.name:', song.name)
+        console.log('  - song.title:', (song as any).title)
+        console.log('  - localFilePath:', (song as any).localFilePath)
+        console.log('  - localFormat:', (song as any).localFormat)
+
+        let fileExtension = ''
+
+        // 优先使用存储的格式信息
+        if ((song as any).localFormat) {
+          fileExtension = (song as any).localFormat.toLowerCase()
+          console.log('  - 使用存储的格式:', fileExtension)
+        } else {
+          // 尝试从多个来源提取文件名和格式
+          const fileName = (song as any).title || song.name || ''
+          const filePath = (song as any).localFilePath || ''
+
+          // 首先尝试从文件名提取
+          if (fileName.includes('.')) {
+            fileExtension = fileName.split('.').pop()?.toLowerCase() || ''
           }
-        },
-        onloaderror: (id, error) => {
-          console.error('❌ 音频加载错误:', error)
-          showToast('音频加载失败，尝试备用音源', 'warning')
 
+          // 如果文件名没有扩展名，尝试从路径提取
+          if (!fileExtension && filePath.includes('.')) {
+            fileExtension = filePath.split('.').pop()?.toLowerCase() || ''
+          }
+
+          console.log('  - 从文件名/路径提取的扩展名:', fileExtension)
+        }
+
+        if (fileExtension && ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a'].includes(fileExtension)) {
+          howlConfig.format = [fileExtension]
+          console.log('🎵 检测到本地音乐格式:', fileExtension)
+        } else {
+          // 默认尝试常见格式
+          howlConfig.format = ['mp3', 'wav', 'ogg', 'aac']
+          console.log('🎵 使用默认音频格式，未检测到有效扩展名')
+        }
+      } else {
+        howlConfig.html5 = false
+      }
+
+      // 添加事件处理器
+      howlConfig.onload = () => {
+        duration.value = howl?.duration() || 0
+        console.log('✅ 音频加载完成，时长:', duration.value)
+        showToast(`音频加载完成: ${song.name}`, 'success')
+      }
+
+      howlConfig.onplay = () => {
+        isPlaying.value = true
+        startUpdateTimer()
+        console.log('✅ 开始播放')
+      }
+
+      howlConfig.onpause = () => {
+        isPlaying.value = false
+        stopUpdateTimer()
+        console.log('⏸️ 暂停播放')
+      }
+
+      howlConfig.onend = () => {
+        isPlaying.value = false
+        console.log('⏹️ 播放结束')
+
+        // 根据播放模式处理播放结束
+        if (playMode.value === 'repeat') {
+          // 单曲循环：重新播放当前歌曲
+          console.log('🔄 单曲循环，重新播放')
+          setTimeout(() => {
+            play()
+          }, 100)
+        } else {
+          // 其他模式：播放下一首
+          nextSong()
+        }
+      }
+
+      howlConfig.onloaderror = (id, error) => {
+        console.error('❌ 音频加载错误:', error)
+
+        // 本地音乐加载失败的特殊处理
+        if ((song as any).isLocal) {
+          showToast('本地音乐文件加载失败', 'warning')
+          console.error('本地音乐文件可能已损坏或格式不支持:', error)
+        } else {
+          showToast('音频加载失败，尝试备用音源', 'warning')
           // 如果是网易云音源失败，尝试其他音源
           if (source === '网易云音乐') {
             loadAlternativeSource(song)
           }
-        },
-        onplayerror: (id, error) => {
-          console.error('❌ 音频播放错误:', error)
-          showToast('播放失败，尝试备用音源', 'warning')
+        }
+      }
 
+      howlConfig.onplayerror = (id, error) => {
+        console.error('❌ 音频播放错误:', error)
+
+        // 本地音乐播放失败的特殊处理
+        if ((song as any).isLocal) {
+          showToast('本地音乐播放失败', 'warning')
+          console.error('本地音乐播放错误，可能是格式不支持:', error)
+        } else {
+          showToast('播放失败，尝试备用音源', 'warning')
           // 尝试备用音源
           loadAlternativeSource(song)
         }
-      })
+      }
+
+      howl = new Howl(howlConfig)
 
       // 开始播放
       console.log('🎵 尝试开始播放...')

@@ -10,6 +10,9 @@ export default defineConfig({
       '@/shared': resolve(__dirname, '../src') // 引用桌面版共享代码
     }
   },
+  define: {
+    global: 'globalThis',
+  },
   server: {
     port: 8080,
     proxy: {

@@ -151,7 +151,7 @@ ion-label {
   .tab-label {
     font-size: 11px;
   }
-  
+
   .tab-icon {
     font-size: 20px;
   }

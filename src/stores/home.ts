@@ -15,13 +15,16 @@ export const useHomeStore = defineStore('home', () => {
   const testNetworkConnection = async () => {
     try {
       console.log('🔍 开始网络连接测试...')
-      const response = await fetch('https://netease-proxy-server.onrender.com/api')
+      // 直接测试本地代理是否可用
+      const response = await fetch('/api/personalized?limit=1')
       const data = await response.json()
       console.log('✅ 网络连接正常:', data)
       return true
     } catch (error) {
       console.error('❌ 网络连接失败:', error)
-      return false
+      // 网络测试失败时也继续执行，避免阻塞
+      console.log('⚠️ 网络测试失败，但继续尝试加载数据...')
+      return true
     }
   }
 

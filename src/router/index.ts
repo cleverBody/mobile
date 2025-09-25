@@ -116,6 +116,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/settings',
     name: 'Settings',
     component: () => import('@/views/Settings/index.vue')
+  },
+  {
+    path: '/local-music',
+    name: 'LocalMusic',
+    component: () => import('@/views/LocalMusic/index.vue')
   }
 ]
 

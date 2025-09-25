@@ -26,7 +26,7 @@ export interface Album {
 }
 
 export interface Song {
-  id: number
+  id: number | string
   name: string
   artists: Artist[]
   album?: Album
@@ -40,6 +40,9 @@ export interface Song {
   playCount?: number
   createTime?: number
   updateTime?: number
+  // 本地文件相关字段
+  type?: 'online' | 'local'
+  filePath?: string
 }
 
 export interface Video {

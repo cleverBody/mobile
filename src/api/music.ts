@@ -4,11 +4,10 @@ import { multiSourceMusicService } from './multiSourceMusic'
 
 // 获取API基础URL
 const getBaseURL = () => {
-  // 更可靠的APK环境检测
+  // 修复环境检测逻辑
   const isAPK = window.location.protocol === 'capacitor:' ||
                 window.location.protocol === 'file:' ||
-                !import.meta.env.DEV ||
-                (typeof window !== 'undefined' && (window as any).Capacitor)
+                (typeof window !== 'undefined' && (window as any).Capacitor && !import.meta.env.DEV)
 
   // APK环境直接使用远程服务器
   if (isAPK) {
@@ -80,13 +79,13 @@ export const musicApi = {
   // 多源获取歌曲播放链接（新增）
   async getMultiSourceSongUrl(song: Song | any): Promise<{ url: string; source: string } | null> {
     console.log('🔄 [多源API] 尝试获取播放链接:', song.name)
-    
+
     // 首先尝试原有的网易云API
     if (song.id && typeof song.id === 'number') {
       try {
         const response = await this.getSongUrl(song.id)
         const url = response.data?.[0]?.url
-        
+
         if (url) {
           console.log('✅ [网易云API] 获取播放链接成功')
           return { url, source: '网易云音乐' }
@@ -95,7 +94,7 @@ export const musicApi = {
         console.warn('⚠️ [网易云API] 获取播放链接失败:', error)
       }
     }
-    
+
     // 如果网易云API失败，使用多源服务
     console.log('🔄 [多源API] 网易云API失败，尝试多源获取')
     return await multiSourceMusicService.getPlayableUrl(song)
@@ -115,7 +114,7 @@ export const musicApi = {
       try {
         const response = await this.getLyric(song.id)
         const lyric = response.lrc?.lyric || response.tlyric?.lyric
-        
+
         if (lyric) {
           console.log('✅ [网易云API] 获取歌词成功')
           return lyric
@@ -124,10 +123,10 @@ export const musicApi = {
         console.warn('⚠️ [网易云API] 获取歌词失败:', error)
       }
     }
-    
+
     // 如果网易云API失败，尝试多源服务
     console.log('🔄 [多源API] 网易云API失败，尝试多源获取歌词')
-    
+
     // 使用GD Studio服务获取歌词
     const gdStudioSources = multiSourceMusicService['sources'] // 访问私有属性
     for (const source of gdStudioSources) {
@@ -143,7 +142,7 @@ export const musicApi = {
         }
       }
     }
-    
+
     return null
   },
 
@@ -157,9 +156,9 @@ export const musicApi = {
   // 多源搜索歌曲（新增）
   async searchSongsMultiSource(keywords: string, limit = 30): Promise<Song[]> {
     console.log('🔍 [多源搜索] 开始搜索:', keywords)
-    
+
     const results: Song[] = []
-    
+
     // 首先尝试网易云搜索
     try {
       console.log('🔍 [网易云API] 开始搜索')
@@ -172,7 +171,7 @@ export const musicApi = {
     } catch (error) {
       console.warn('⚠️ [网易云API] 搜索失败:', error)
     }
-    
+
     // 然后使用多源搜索补充结果
     try {
       console.log('🔍 [多源搜索] 开始补充搜索')
@@ -182,11 +181,11 @@ export const musicApi = {
     } catch (error) {
       console.warn('⚠️ [多源搜索] 补充搜索失败:', error)
     }
-    
+
     // 去重并限制数量
     const uniqueResults = this.deduplicateSearchResults(results)
     console.log(`✅ [多源搜索] 搜索完成，去重后返回 ${uniqueResults.length} 首歌曲`)
-    
+
     return uniqueResults.slice(0, limit)
   },
 
@@ -197,7 +196,7 @@ export const musicApi = {
       const key = `${song.name}-${song.artists?.[0]?.name || ''}`
         .toLowerCase()
         .replace(/\s+/g, '')
-      
+
       if (seen.has(key)) {
         return false
       }
