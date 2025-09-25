@@ -70,9 +70,10 @@ export const musicApi = {
   },
 
   // 获取歌曲播放链接
-  getSongUrl(id: number, level = 'exhigh'): Promise<{ data: Array<{ id: number, url: string }> }> {
-    return api.get('/song_url_v1', {
-      params: { id, level }
+  getSongUrl(id: number, level = 'exhigh'): Promise<{ data: { id: number, url: string, level: string } }> {
+    // 直接使用新的API地址
+    return axios.get('https://wyy.331106.xyz/song', {
+      params: { id, level, type: 'url' }
     })
   },
 
@@ -83,12 +84,17 @@ export const musicApi = {
     // 首先尝试原有的网易云API
     if (song.id && typeof song.id === 'number') {
       try {
+        console.log('🔍 [网易云API] 开始获取播放链接，歌曲ID:', song.id)
         const response = await this.getSongUrl(song.id)
-        const url = response.data?.[0]?.url
+        console.log('🔍 [网易云API] 响应数据:', response.data)
+        // 新API返回格式：{ data: { data: { url: "...", id: ... } } }
+        const url = response.data?.data?.url || response.data?.url
 
         if (url) {
-          console.log('✅ [网易云API] 获取播放链接成功')
+          console.log('✅ [网易云API] 获取播放链接成功:', url)
           return { url, source: '网易云音乐' }
+        } else {
+          console.warn('⚠️ [网易云API] 响应中没有URL字段')
         }
       } catch (error) {
         console.warn('⚠️ [网易云API] 获取播放链接失败:', error)
