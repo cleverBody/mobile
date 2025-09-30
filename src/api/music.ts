@@ -18,7 +18,7 @@ const getBaseURL = () => {
 
   // 浏览器开发环境使用代理
   console.log('🔍 music.ts: 检测到浏览器环境，使用代理')
-  return '/api'
+  return 'https://netease-proxy-server.onrender.com/api'
 }
 
 // API基础配置
@@ -79,19 +79,23 @@ export const musicApi = {
 
   // 多源获取歌曲播放链接（新增）
   async getMultiSourceSongUrl(song: Song | any): Promise<{ url: string; source: string } | null> {
+    const startTime = Date.now()
     console.log('🔄 [多源API] 尝试获取播放链接:', song.name)
 
     // 首先尝试原有的网易云API
     if (song.id && typeof song.id === 'number') {
       try {
+        const apiStartTime = Date.now()
         console.log('🔍 [网易云API] 开始获取播放链接，歌曲ID:', song.id)
         const response = await this.getSongUrl(song.id)
-        console.log('🔍 [网易云API] 响应数据:', response.data)
+        const apiEndTime = Date.now()
+        console.log(`🔍 [网易云API] 响应数据 (耗时: ${apiEndTime - apiStartTime}ms):`, response.data)
         // 新API返回格式：{ data: { data: { url: "...", id: ... } } }
         const url = response.data?.data?.url || response.data?.url
 
         if (url) {
-          console.log('✅ [网易云API] 获取播放链接成功:', url)
+          const totalTime = Date.now() - startTime
+          console.log(`✅ [网易云API] 获取播放链接成功 (总耗时: ${totalTime}ms):`, url)
           return { url, source: '网易云音乐' }
         } else {
           console.warn('⚠️ [网易云API] 响应中没有URL字段')

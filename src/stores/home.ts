@@ -35,10 +35,10 @@ export const useHomeStore = defineStore('home', () => {
 
     try {
       // 先测试网络连接
-      const networkOk = await testNetworkConnection()
-      if (!networkOk) {
-        throw new Error('网络连接失败，请检查网络设置')
-      }
+      // const networkOk = await testNetworkConnection()
+      // if (!networkOk) {
+      //   throw new Error('网络连接失败，请检查网络设置')
+      // }
 
       console.log('🚀 开始加载首页数据...')
 

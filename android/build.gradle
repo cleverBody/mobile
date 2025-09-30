@@ -40,6 +40,11 @@ subprojects {
                 }
             }
         }
+        if (project.plugins.hasPlugin('kotlin-android')) {
+            kotlin {
+                jvmToolchain(17)
+            }
+        }
     }
 }
 

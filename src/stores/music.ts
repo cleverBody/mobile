@@ -105,6 +105,7 @@ export const useMusicStore = defineStore('music', () => {
   // 加载并播放歌曲 - 增强多源支持
   const loadAndPlaySong = async (song: Song) => {
     try {
+      const loadStartTime = Date.now()
       console.log('🎵 开始加载歌曲:', song.name)
 
       // 重置多源状态
@@ -205,7 +206,7 @@ export const useMusicStore = defineStore('music', () => {
       const howlConfig: any = {
         src: [songUrl],
         volume: volume.value,
-        preload: isMobile ? 'metadata' : true,
+        preload: 'none', // 改为不预加载，加快启动速度
       }
 
       // 本地音乐需要特殊处理
@@ -251,14 +252,15 @@ export const useMusicStore = defineStore('music', () => {
           console.log('🎵 使用默认音频格式，未检测到有效扩展名')
         }
       } else {
-        howlConfig.html5 = false
+        // 在线音乐使用HTML5模式以获得更快的启动速度
+        howlConfig.html5 = true
       }
 
       // 添加事件处理器
       howlConfig.onload = () => {
         duration.value = howl?.duration() || 0
         console.log('✅ 音频加载完成，时长:', duration.value)
-        showToast(`音频加载完成: ${song.name}`, 'success')
+        // showToast(`音频加载完成: ${song.name}`, 'success')
       }
 
       howlConfig.onplay = () => {
@@ -295,10 +297,10 @@ export const useMusicStore = defineStore('music', () => {
 
         // 本地音乐加载失败的特殊处理
         if ((song as any).isLocal) {
-          showToast('本地音乐文件加载失败', 'warning')
+          // showToast('本地音乐文件加载失败', 'warning')
           console.error('本地音乐文件可能已损坏或格式不支持:', error)
         } else {
-          showToast('音频加载失败，尝试备用音源', 'warning')
+          // showToast('音频加载失败，尝试备用音源', 'warning')
           // 如果是网易云音源失败，尝试其他音源
           if (source === '网易云音乐') {
             loadAlternativeSource(song)
@@ -311,10 +313,10 @@ export const useMusicStore = defineStore('music', () => {
 
         // 本地音乐播放失败的特殊处理
         if ((song as any).isLocal) {
-          showToast('本地音乐播放失败', 'warning')
+          // showToast('本地音乐播放失败', 'warning')
           console.error('本地音乐播放错误，可能是格式不支持:', error)
         } else {
-          showToast('播放失败，尝试备用音源', 'warning')
+          // showToast('播放失败，尝试备用音源', 'warning')
           // 尝试备用音源
           loadAlternativeSource(song)
         }
@@ -323,7 +325,9 @@ export const useMusicStore = defineStore('music', () => {
       howl = new Howl(howlConfig)
 
       // 开始播放
-      console.log('🎵 尝试开始播放...')
+      const playStartTime = Date.now()
+      const totalLoadTime = playStartTime - loadStartTime
+      console.log(`🎵 尝试开始播放... (总加载耗时: ${totalLoadTime}ms)`)
       try {
         howl.play()
         console.log('✅ 播放命令已发送')
@@ -334,7 +338,7 @@ export const useMusicStore = defineStore('music', () => {
 
     } catch (error) {
       console.error('加载歌曲失败:', error)
-      showToast('加载歌曲失败', 'danger')
+      // showToast('加载歌曲失败', 'danger')
     }
   }
 
@@ -360,7 +364,7 @@ export const useMusicStore = defineStore('music', () => {
 
       if (!fallbackResult) {
         console.error('❌ 备用音源也无法获取')
-        showToast('所有音源都无法播放', 'danger')
+        // showToast('所有音源都无法播放', 'danger')
 
         // 自动跳到下一首
         if (hasNext.value) {
@@ -375,7 +379,7 @@ export const useMusicStore = defineStore('music', () => {
       currentAudioSource.value = fallbackSource
 
       console.log('✅ 获取到备用播放URL:', fallbackUrl, '音源:', fallbackSource)
-      showToast(`切换到 ${fallbackSource}`, 'success')
+      // showToast(`切换到 ${fallbackSource}`, 'success')
 
       // 创建新的Howl实例
       howl = new Howl({
@@ -414,7 +418,7 @@ export const useMusicStore = defineStore('music', () => {
         },
         onloaderror: () => {
           console.error('❌ 备用音源也加载失败')
-          showToast('备用音源加载失败', 'danger')
+          // showToast('备用音源加载失败', 'danger')
         }
       })
 
@@ -423,7 +427,7 @@ export const useMusicStore = defineStore('music', () => {
 
     } catch (error) {
       console.error('❌ 备用音源加载异常:', error)
-      showToast('备用音源加载异常', 'danger')
+      // showToast('备用音源加载异常', 'danger')
     } finally {
       setTimeout(() => {
         isLoadingAlternativeSource.value = false
